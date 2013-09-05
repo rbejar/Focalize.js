@@ -148,7 +148,7 @@ var Focalize = (function () {
       
       if (nextSlideInSeq) {
         $(".backToScroll").animate({left: "-=" + $("html").width()+ "px"}, "slow");
-        $scrollingBack.animate({left: "-=" + $("html").width()+ "px"}, "slow", function() {
+        $scrollingBack.animate({left: "-=" + $("html").width()/4+ "px"}, "slow", function() {
           $scrollingBack.spStart();     
         });
         
@@ -157,7 +157,7 @@ var Focalize = (function () {
           }, "slow", addSlideToDisplay);
       } else if (prevSlideInSeq) {
         $(".backToScroll").animate({left: "+=" + $("html").width()+ "px"}, "slow");
-        $scrollingBack.animate({left: "+=" + $("html").width()+ "px"}, "slow", function() {
+        $scrollingBack.animate({left: "+=" + $("html").width()/4+ "px"}, "slow", function() {
           $scrollingBack.spStart();     
         });
         
