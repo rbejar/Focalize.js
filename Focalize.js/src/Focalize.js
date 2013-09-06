@@ -226,6 +226,15 @@ var Focalize = (function () {
     }
     
     
+    // QUICK TEST... 
+    
+    $.physix2d.init();
+    console.log($.physix2d.world);
+    $.physix2d.changeGravity(new Box2D.b2Vec2(0, -9));
+    console.log($.physix2d.gravity);
+    
+    
+    
     // Display first slide to start the "presentation loop"
     Focalize.displaySlide(0);
     
