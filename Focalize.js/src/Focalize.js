@@ -64,13 +64,15 @@ var Focalize = (function () {
     var $seqDiv = $("<div></div>").addClass("seqToDisplay seq-templ-1");            
     var $nonScrollElementDiv = $("<div></div>").addClass("backToScroll back-seq-templ-1")
                                .css({width: seqWidthPx, 
-                                     "background":"transparent url(assets/hill-with-windmill.png) repeat-x"});
+                                     "background":"transparent url(assets/hill-with-windmill.png) repeat-x",
+                                     transition: "left 1s"});
     
     var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
     // spritely scrolls fine with a width of 100%, but I need this for the
     // changes between slides
     var $scrollElementDiv = $("<div></div>").addClass("scrollingBack scrollback-seq-templ-1")
-                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x"});
+                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x",
+                           transition: "left 1s"});
     $seqDiv.append($nonScrollElementDiv);
     $seqDiv.append($backgroundDiv);    
     $backgroundDiv.append($scrollElementDiv);
@@ -126,6 +128,7 @@ var Focalize = (function () {
     var $slideToDisplay = Focalize.$slideDivs[newSlideIdx].clone();
     $slideToDisplay.addClass("slideToDisplay");    
     var $slideToRemove = $(".slideToDisplay");
+    $slideToRemove.css({transition: "left 1s"});
     
     
     var addSlideToDisplay = function() {
@@ -147,23 +150,23 @@ var Focalize = (function () {
       $scrollingBack.spStop();
       
       if (nextSlideInSeq) {
-        $(".backToScroll").animate({left: "-=" + $("html").width()+ "px"}, "slow");
-        $scrollingBack.animate({left: "-=" + $("html").width()/4+ "px"}, "slow", function() {
-          $scrollingBack.spStart();     
-        });
+        $(".backToScroll").transition({ x: "-="+$("html").width()+"px" }, "slow");
+
+        $scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
+          $scrollingBack.spStart();
+        });       
         
-        $slideToRemove.css({position : "absolute", width : "100%"}).animate({
-          left: "-=" + $("html").width()+ "px",
-          }, "slow", addSlideToDisplay);
-      } else if (prevSlideInSeq) {
-        $(".backToScroll").animate({left: "+=" + $("html").width()+ "px"}, "slow");
-        $scrollingBack.animate({left: "+=" + $("html").width()/4+ "px"}, "slow", function() {
-          $scrollingBack.spStart();     
+        $slideToRemove.css({position : "absolute", width : "100%"})
+                      .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
+      } else if (prevSlideInSeq) {       
+        $(".backToScroll").transition({ x: "+="+$("html").width()+"px" }, "slow");
+                
+        $scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
+          $scrollingBack.spStart();
         });
-        
-        $slideToRemove.css({position : "absolute", width : "100%"}).animate({
-          left: "+=" + $("html").width()+ "px",
-          }, "slow", addSlideToDisplay);
+
+        $slideToRemove.css({position : "absolute", width : "100%"})
+        .transition({ x: "+="+$("html").width()+"px" }, "slow", addSlideToDisplay);
       } else { // IS A NEW SEQUENCE
       }
     }
@@ -228,10 +231,8 @@ var Focalize = (function () {
     
     // QUICK TEST... 
     
-    $.physix2d.init();
-    console.log($.physix2d.world);
-    $.physix2d.changeGravity(new Box2D.b2Vec2(0, -9));
-    console.log($.physix2d.gravity);
+    //$.physix2d.init();
+    //console.log($.physix2d.world);
     
     
     
