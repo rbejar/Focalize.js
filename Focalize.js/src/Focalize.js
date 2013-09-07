@@ -64,15 +64,13 @@ var Focalize = (function () {
     var $seqDiv = $("<div></div>").addClass("seqToDisplay seq-templ-1");            
     var $nonScrollElementDiv = $("<div></div>").addClass("backToScroll back-seq-templ-1")
                                .css({width: seqWidthPx, 
-                                     "background":"transparent url(assets/hill-with-windmill.png) repeat-x",
-                                     transition: "left 1s"});
+                                     "background":"transparent url(assets/hill-with-windmill.png) repeat-x"});
     
     var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
     // spritely scrolls fine with a width of 100%, but I need this for the
     // changes between slides
     var $scrollElementDiv = $("<div></div>").addClass("scrollingBack scrollback-seq-templ-1")
-                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x",
-                           transition: "left 1s"});
+                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x"});
     $seqDiv.append($nonScrollElementDiv);
     $seqDiv.append($backgroundDiv);    
     $backgroundDiv.append($scrollElementDiv);
@@ -127,8 +125,7 @@ var Focalize = (function () {
     // "destroying" the originals
     var $slideToDisplay = Focalize.$slideDivs[newSlideIdx].clone();
     $slideToDisplay.addClass("slideToDisplay");    
-    var $slideToRemove = $(".slideToDisplay");
-    $slideToRemove.css({transition: "left 1s"});
+    var $slideToRemove = $(".slideToDisplay");    
     
     
     var addSlideToDisplay = function() {
