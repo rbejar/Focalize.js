@@ -34,11 +34,14 @@
 
 (function($) {
   $.physix2d = {
-    world : null,    
+    world : null,   
+    bodies : [],
+    $elements : [],
     time : 0,
     timeStepS : (1/60), /* Constant, for the world.step function */
     timeStepMs : (1/60)*1000, /* Constant, for the world.step function */
     dtRemaining : 0,
+    scale : 30,
     
     init: function(opts) {      
       var defaults = {
@@ -47,7 +50,8 @@
         gravity : new Box2D.b2Vec2(0, -10)  
       };
     
-      var options = $.extend(defaults, opts);                  
+      var options = $.extend(defaults, opts);
+      $.physix2d.scale = options.scale;
       $.physix2d.world = new Box2D.b2World(options.gravity);
     },
   
@@ -59,11 +63,11 @@
       
     },
        
-    simulate : function() {
-      requestAnimationFrame($.physix2d.draw);
+    simulate : function() {      
+      requestAnimationFrame($.physix2d.simulate);
       var now = new Date().getTime(),
           dt = now - ($.physix2d.time || now);     
-      $.physix2d.time = now;
+      $.physix2d.time = now;      
       
       // We want the world step to be constant (recommendation by Box2D)
       // so we may need to make more than one step if delta time (time since
@@ -72,18 +76,39 @@
       $.physix2d.dtRemaining += dt;
       while ($.physix2d.dtRemaining > $.physix2d.timeStepMs) {
         $.physix2d.dtRemaining -= $.physix2d.timeStepMs;
-        world.Step($.physix2d.timeStepS, 8, 3); // Step requires seconds. 8 velocityIterations, 3 positionIterations
+        $.physix2d.world.Step($.physix2d.timeStepS, 8, 3); // Step requires seconds. 8 velocityIterations, 3 positionIterations
       }
      
-      // FOR EACH BODY IN THE WORLD, UPDATE POS AND ROTATION OF ITS CORRESPONDING ELEMENT
-      // IF THIS IS THE SAME AS DRAWING, DO IT IN A SEPARATE FUNCTION (p.ej draw)
+      
+      // FOR EACH BODY IN THE WORLD, UPDATE POS AND ROTATION OF ITS CORRESPONDING ELEMENT          
+      for (var i = 0; i < $.physix2d.bodies.length; i++) {
+        var currentBody = $.physix2d.bodies[i];
+        var $currentElement = $.physix2d.$elements[i];
+        var bodyPos = currentBody.GetPosition();
+        var elementPos = $.physix2d._fromWorld(bodyPos.get_x(), bodyPos.get_y(), currentBody.GetAngle());
+        //$currentElement.transition({ x: elementPos.x, y: elementPos.y, rotate : elementPos.rotate, duration : 0});
+        // I am rounding the rotation because otherwise this is not working well... :-/
+        $currentElement.css({ translate: [elementPos.x, elementPos.y], rotate : Math.round(elementPos.rotate)});
+       
+      }
+       
+    },
+    
+    /**
+     * x, y and rotation as provided by box2d
+     * @param x
+     * @param y
+     * @param rotation
+     */
+    _fromWorld : function(x, y, rotate) {
+      return {x : x * $.physix2d.scale, y : -(y * $.physix2d.scale), rotate : rotate*180/Math.PI};
     }
 };
       
   /**
    * Make these elements bodies in the world
    */
-  $.fn.physix2d_ToBodies = function(opts) {    
+  $.fn.physix2d_ToBody = function(opts) {    
     var defaults = {
       type : "dynamic", /* dynamic or static */
       density : 1.5, /* 0.. n */
@@ -101,8 +126,9 @@
       // Do something with $currentElement
 
       // Using jQuery width and height (not taking into account border or padding)
-      var width = $currentElement.width();
-      var height = $currentElement.height();
+      // and taking into account the scale of the physic world
+      var width = $currentElement.width() * $.physix2d.scale;
+      var height = $currentElement.height() * $.physix2d.scale;
       
       // Create physic body (fixture+shape) and add to the world...
       if (options.shape === "box") {
@@ -116,7 +142,7 @@
       }
       
       bd = new Box2D.b2BodyDef();
-      if (type === "dynamic") {
+      if (options.type === "dynamic") {
         bd.set_type(Box2D.b2_dynamicBody);  
       } else { // we assume it is static if not dynamic
         bd.set_type(Box2D.b2_staticBody);
@@ -130,7 +156,10 @@
       fd.set_shape(shape);
       body.CreateFixture(fd);
       
-      body.setUserData($currentElement);
+      body.SetUserData($currentElement);
+      
+      $.physix2d.bodies.push(body);
+      $.physix2d.$elements.push($currentElement);
     });     
   };
 })(jQuery);

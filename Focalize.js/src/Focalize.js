@@ -226,17 +226,17 @@ var Focalize = (function () {
     }
     
     
-    // QUICK TEST... 
-    
-    //$.physix2d.init();
-    //console.log($.physix2d.world);
-    
-    
-    
     // Display first slide to start the "presentation loop"
     Focalize.displaySlide(0);
     
     $(document).keyup(Focalize.presentationHandler);
+    
+    
+    // QUICK TEST... 
+    
+    $.physix2d.init();
+    $("h1,h2,h3").physix2d_ToBody();
+    $.physix2d.simulate();
     
  
   };
