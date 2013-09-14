@@ -88,20 +88,24 @@
         var elementPos = $.physix2d._fromWorld(bodyPos.get_x(), bodyPos.get_y(), currentBody.GetAngle());
         //$currentElement.transition({ x: elementPos.x, y: elementPos.y, rotate : elementPos.rotate, duration : 0});
         // I am rounding the rotation because otherwise this is not working well... :-/
-        $currentElement.css({ translate: [elementPos.x, elementPos.y], rotate : Math.round(elementPos.rotate)});
+        $currentElement.css({ translate: [elementPos.x, elementPos.y], rotate : elementPos.rotate});
        
       }
        
     },
     
     /**
-     * x, y and rotation as provided by box2d
+     * x, y and rotation as provided by box2d are returned as needed on screen.
+     * Rounding x and y is logic (they are pixels). I am not so sure about rotation,
+     * but it does not work well if I don't...  
      * @param x
      * @param y
      * @param rotation
      */
     _fromWorld : function(x, y, rotate) {
-      return {x : x * $.physix2d.scale, y : -(y * $.physix2d.scale), rotate : rotate*180/Math.PI};
+      return {x : Math.round(x * $.physix2d.scale), 
+              y : -Math.round(y * $.physix2d.scale), 
+              rotate : Math.round(rotate*180/Math.PI)};
     }
 };
       

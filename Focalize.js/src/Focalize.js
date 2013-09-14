@@ -92,7 +92,7 @@ var Focalize = (function () {
    */
   Focalize.displaySlide = function(newSlideIdx) {    
     if (newSlideIdx < 0 || newSlideIdx > (Focalize.numSlides - 1)) {
-      // The slide does not exist. Do nothing.
+      // The slide newSlideIdx does not exist. Do nothing.
       return;
     }
     
@@ -122,14 +122,16 @@ var Focalize = (function () {
     // we must use clone in order to prevent making changes to our
     // "master" slideDivs. This way we can make any changes to the
     // slideDivs (adding classes, changing position...) without
-    // "destroying" the originals
+    // "destroying" the originals (allowing thus to return to
+    // any previous slide in its "start" state)
     var $slideToDisplay = Focalize.$slideDivs[newSlideIdx].clone();
+    
     $slideToDisplay.addClass("slideToDisplay");    
     var $slideToRemove = $(".slideToDisplay");    
     
     
-    var addSlideToDisplay = function() {
-      $(".seqToDisplay").append($slideToDisplay);     
+    var addSlideToDisplay = function() {      
+      $(".seqToDisplay").append($slideToDisplay);
       $(".text-seq-templ-1").fitText();
       removeCurrentSlide();      
     };
@@ -176,7 +178,7 @@ var Focalize = (function () {
   };
   
   Focalize.presentationHandler = function(event) {
-    var newSlideIdx;    
+    var newSlideIdx = Focalize.currSlideIdx;    
     //console.log(event.keyCode);
     if (event.keyCode === 39) {
       newSlideIdx = Focalize.currSlideIdx + 1;
@@ -232,11 +234,11 @@ var Focalize = (function () {
     $(document).keyup(Focalize.presentationHandler);
     
     
-    // QUICK TEST... 
+    // QUICK PHYSICX2D TEST... 
     
-    $.physix2d.init();
-    $("h1,h2,h3").physix2d_ToBody();
-    $.physix2d.simulate();
+    //$.physix2d.init();
+    //$("h1,h2,h3").physix2d_ToBody();
+    //$.physix2d.simulate();
     
  
   };

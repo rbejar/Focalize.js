@@ -1,0 +1,9 @@
+{
+  "slideName": "SimpleCitySlide1",
+  "contentCss": {
+    "h1": "width: 50%; margin:0 auto;",
+    "h2": "width: 40%; margin:0 auto;",
+    "h3": "width: 35%; margin:0 auto;"
+    }
+  }
+}
