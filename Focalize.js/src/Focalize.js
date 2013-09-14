@@ -16,13 +16,13 @@ var Focalize = (function () {
   Focalize.seqNumSlides = []; 
   Focalize.$slideDivs = [];
   
-  Focalize.seqOfSlide = function(slideIdx) {    
+  Focalize.seqOfSlide = function(slideIdx) {        
     for (var i = 1; i < Focalize.seqChanges.length; i++) {
       if (slideIdx < Focalize.seqChanges[i]) {
         return i-1;
       }  
     }
-    return i;
+    return 0;
   };
 
   
@@ -60,26 +60,38 @@ var Focalize = (function () {
    */
   Focalize.$createSeqDiv = function(currSeqIdx) {    
     var seqWidthPx = Focalize.seqNumSlides[currSeqIdx] * $("html").width();    
+    console.log(currSeqIdx);
+    console.log("HTML width "+$("html").width());
+    console.log(seqWidthPx);
+    var $seqDiv = $("<div></div>").addClass("seqToDisplay simple-city-style");            
     
-    var $seqDiv = $("<div></div>").addClass("seqToDisplay seq-templ-1");            
-    var $nonScrollElementDiv = $("<div></div>").addClass("backToScroll back-seq-templ-1")
-                               .css({width: seqWidthPx, 
-                                     "background":"transparent url(assets/hill-with-windmill.png) repeat-x"});
+   
+    var $nonScrollElementDiv1 = $("<div></div>").addClass("backToScroll1 background-dessert")
+                                               .css({width: seqWidthPx});
+    var $nonScrollElementDiv2 = $("<div></div>").addClass("backToScroll2 background-skyscrapers")
+    .css({width: seqWidthPx}); 
     
+    var $nonScrollElementDiv3 = $("<div></div>").addClass("backToScroll3 background-houses")
+    .css({width: seqWidthPx});
+    
+        
     var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
     // spritely scrolls fine with a width of 100%, but I need this for the
     // changes between slides
-    var $scrollElementDiv = $("<div></div>").addClass("scrollingBack scrollback-seq-templ-1")
-                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x"});
-    $seqDiv.append($nonScrollElementDiv);
+    //var $scrollElementDiv = $("<div></div>").addClass("scrollingBack scrollback-seq-templ-1")
+    //                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x"});
+    
+    $seqDiv.append($nonScrollElementDiv1);
+    $seqDiv.append($nonScrollElementDiv2);
+    $seqDiv.append($nonScrollElementDiv3);
     $seqDiv.append($backgroundDiv);    
-    $backgroundDiv.append($scrollElementDiv);
-    $scrollElementDiv.pan({fps: 30, speed: 1, dir: 'left'});
+    //$backgroundDiv.append($scrollElementDiv);
+    //$scrollElementDiv.pan({fps: 30, speed: 1, dir: 'left'});
     return $seqDiv;
   };
   
   Focalize.$createSlideDiv = function($slideChildren) {
-    var $slideDiv = $("<div></div>").addClass("slide-style-1");
+    var $slideDiv = $("<div></div>").addClass("simple-city-slide-common");
     $slideDiv.append($slideChildren);
     return $slideDiv;
   };
@@ -145,24 +157,28 @@ var Focalize = (function () {
       // In first slide...
       addSlideToDisplay(); 
     } else { 
-      var $scrollingBack = $(".scrollingBack");      
-      $scrollingBack.spStop();
+      //var $scrollingBack = $(".scrollingBack");      
+      //$scrollingBack.spStop();
       
       if (nextSlideInSeq) {
-        $(".backToScroll").transition({ x: "-="+$("html").width()+"px" }, "slow");
+        $(".backToScroll1").transition({ x: "-="+$("html").width()/5+"px" }, "slow");
+        $(".backToScroll2").transition({ x: "-="+$("html").width()/4+"px" }, "slow");
+        $(".backToScroll3").transition({ x: "-="+$("html").width()/2+"px" }, "slow");
 
-        $scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
+        /*$scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
-        });       
+        });*/       
         
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
       } else if (prevSlideInSeq) {       
-        $(".backToScroll").transition({ x: "+="+$("html").width()+"px" }, "slow");
+        $(".backToScroll1").transition({ x: "+="+$("html").width()/5+"px" }, "slow");
+        $(".backToScroll2").transition({ x: "+="+$("html").width()/4+"px" }, "slow");
+        $(".backToScroll3").transition({ x: "+="+$("html").width()/2+"px" }, "slow");
                 
-        $scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
+        /*$scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
-        });
+        });*/
 
         $slideToRemove.css({position : "absolute", width : "100%"})
         .transition({ x: "+="+$("html").width()+"px" }, "slow", addSlideToDisplay);

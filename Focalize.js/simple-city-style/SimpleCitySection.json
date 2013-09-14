@@ -1,0 +1,17 @@
+{      
+  "_comments": "Image sizes in pixels. If SVG, size in pixels at 100 dpi", 
+  "styleName": "Simple City",    
+  "backgroundLayers":[
+    {"cssClass": "background-dessert",            
+     "imageWidth" : 1371,
+     "imageHeight" : 530,
+     "scrollSpeed" : 0.25},       
+    {"cssClass": "background-skyscrapers",            
+     "imageWidth" : 2225,
+     "imageHeight" : 705,
+     "scrollSpeed" : 0.45},
+    {"cssClass": "background-houses",            
+     "imageWidth" : 2814,
+     "imageHeight" : 417,
+     "scrollSpeed" : 0.75}]   
+}

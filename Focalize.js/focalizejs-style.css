@@ -1,0 +1,16 @@
+body {
+  background: black;
+  margin:0 auto;
+}
+
+.focalize-presentation {
+  display:none; /*start hidden and taking no space*/ 
+}
+
+.focalize-sequence {
+ /* Used only as a marker class */	
+}
+
+section.focalize-slide {      
+  z-index: 500;
+} 
