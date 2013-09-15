@@ -14,3 +14,27 @@ body {
 section.focalize-slide {      
   z-index: 500;
 } 
+
+/***********************************/
+/* Required by the jSlabify plugin */
+.slabified .slabbedtext
+        {
+        display:-moz-inline-box;
+        display:inline-block;
+        white-space:nowrap;        
+        }
+.slabbedtextinactive .slabbedtext
+        {
+        display:inline;
+        white-space:normal;
+        font-size:1em !important;
+        letter-spacing:inherit !important;
+        word-spacing:inherit !important;
+        *letter-spacing:0 !important;
+        *word-spacing:0 !important;
+        }
+.slabbedtextdone .slabbedtext
+        {
+        display:block;
+        }
+/***********************************/

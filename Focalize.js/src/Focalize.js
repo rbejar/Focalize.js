@@ -161,7 +161,22 @@ var Focalize = (function () {
     
     var addSlideToDisplay = function() {      
       $(".seqToDisplay").append($slideToDisplay);
-      $(".simplecity-slide-style-1").fitText();
+      
+      $(".simplecity-slide-style-1").jSlabify({fixedHeight:true, constrainHeight: true, 
+                                               hCenter: true, vCenter: true,                                                
+                                               maxWordSpace: 0.9,
+                                               maxLetterSpace: 1.2 });
+      /* maxWordSpace defaults to 3 and maxLetterSpace defaults to 1.5, 
+       * and I think that is too much, at least for
+       * the titles. Maybe this could be configured in the style json file.
+       * However, I can't tweak it very well: it always seems too much or too little...
+       */
+      
+      // I have also briefly tried FitText, BigText and SlabText.
+      // Neither of them takes into consideration 
+      // vertical space, so they do not seem to offer
+      // anything better for my needs than jSlabify.
+
       removeCurrentSlide();      
     };
     
@@ -272,11 +287,17 @@ var Focalize = (function () {
       Focalize.seqNumSlides[i] = $currSeqSlides.length;
       for (var j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
-        var $slideChildren = Focalize.$slides[Focalize.numSlides].find("h1,h2,h3").addClass("simplecity-slide-style-1");
+        var $slideChildren1 = Focalize.$slides[Focalize.numSlides].find("h1").addClass("simplecity-slide-style-1");
+        var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simplecity-slide-style-1");        
+        var $billBoard = $("<div></div>").addClass("foreground-billboard");        
+        var $billBoardTextArea = $("<div></div>").addClass("foreground-billboard-textarea");
+        $billBoardTextArea.append($slideChildren1);
+        $billBoard.append($billBoardTextArea);
+        
+        var $slideChildren = $slideChildren23.add($billBoard);
         
         
-        var $billBoard = $("<div></div>").addClass("foreground-billboard");
-        $slideChildren = $slideChildren.add($billBoard);
+        
         
         Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren);        
         Focalize.numSlides += 1;
