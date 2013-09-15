@@ -5,13 +5,16 @@
     {"cssClass": "background-dessert",            
      "imageWidth" : 1371,
      "imageHeight" : 530,
-     "scrollSpeed" : 0.25},       
+     "scrollSpeed" : 0.25,
+     "pagesWide" : 0.83},       
     {"cssClass": "background-skyscrapers",            
      "imageWidth" : 2225,
      "imageHeight" : 705,
-     "scrollSpeed" : 0.45},
+     "scrollSpeed" : 0.45,
+     "pagesWide" : 1.35},
     {"cssClass": "background-houses",            
      "imageWidth" : 2814,
      "imageHeight" : 417,
-     "scrollSpeed" : 0.75}]   
+     "scrollSpeed" : 0.75,
+     "pagesWide" : 1.7}]   
 }

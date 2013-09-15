@@ -11,7 +11,7 @@ div.simple-city-style {
 
 /* Background layers*/
 
-/* With SVG images it is slow as hell, at least in Firefox in my Kubuntu laptop */
+/* With SVG images it is slow as hell. With PNG images much better. */
 
 div.background-dessert {
   position: fixed;
@@ -22,17 +22,9 @@ div.background-dessert {
   overflow: hidden;
   z-index: -1000;
   background: transparent url(background_dessert_1371x530_100dpi.png) repeat-x;
-  /*background-size: 1371px 530px;*/ /* Incluso usando SVG, el background-size debería depender del 
-                                    tamaño de pantalla porque cambia mucho. 
-                                    Eso si, el aspect ratio tiene que ser el de la imagen.
-                                    Vamos, que si queremos ocupar el 45% de alto (y repeat-x) entonces
-                                    hay que darle la altura en px que sea el 45% de full screen y el
-                                    ancho que luego corresponda según el aspect ratio */
-  background-size: 1371px 100%; /* Si ponemos height en porcentaje, coge el tamaño del padre (el del div contenedor)
-                                   y no varía al hacer zoom en el navegador. Lo que si varía es el ancho, pero
-                                   bueno, si lo fijamos al tamaño bueno una vez el usuario está en full screen, pues
-                                   que no haga zoom (o se altera por eventos en JavaScript). Si no no hay manera de mantener
-                                   algo coherente...  */
+  /* background-size must be established in the code, as it depends on the number
+    of slides (is the only way I have found to prevent problems when the user
+    has her browser with a "weird" zoom level) */
 }
 
 div.background-skyscrapers {
@@ -44,24 +36,27 @@ div.background-skyscrapers {
   overflow: hidden;
   z-index: -700;
   background: transparent url(background_skyscrapers_2225x705_100dpi.png) repeat-x;
-  /*background-size: 2225px 705px;*/ 
-  background-size: 2225px 100%; 
+  /* background-size must be established in the code, as it depends on the number
+     of slides (is the only way I have found to prevent problems when the user
+     has her browser with a "weird" zoom level) */ 
 }
 
 div.background-houses {
   position: fixed;
   top: 40%;
-  left: 0;
+  left: 0;  
   width: 100%;      
   height: 36%;
   overflow: hidden;
   z-index: -500;
-  background: transparent url(background_houses_2814x417_100dpi.png) repeat-x;
-  /*background-size: 2814px 417px;*/ 
-  background-size: 2814px 100%; 
+  background: transparent url(background_houses_2814x417_100dpi.png) repeat-x;  
+  /* background-size must be established in the code, as it depends on the number
+     of slides (is the only way I have found to prevent problems when the user
+     has her browser with a "weird" zoom level) */
 } 
 
-/* Slide basics (for all types of slides in the style) */
+
+/* Slide commons (for several or all types of slides in the style) */
 .simple-city-slide-common {
   position: fixed;
   top : 0;
@@ -72,23 +67,34 @@ div.background-houses {
   z-index: 5000;
 }
 
-/* SLIDE STYLE 1: simplecity-basicslide */
+div.foreground-billboard {
+  position: fixed;
+  top: 3%;   
+  left: 4.5%;      
+  width: 91%;      
+  height: 21%;
+  overflow: hidden;
+  z-index: 200;  
+  background: transparent url(billboard_1459x249_100dpi.png) no-repeat;
+  background-size: 100% 100%; /* We take the full div with the image, no matter what */
+} 
 
 
+/* SLIDE STYLE 1: simplecity-slide-style-1 */
 
-h1.text-seq-templ-1 {      
+h1.simplecity-slide-style-1 {      
   width: 50%;
   margin:0 auto;   
   color: white;
 }
 
-h2.text-seq-templ-1 {
+h2.simplecity-slide-style-1 {
   width: 40%;
   margin:0 auto;
   color: white;
 }
 
-h3.text-seq-templ-1 {      
+h3.simplecity-slide-style-1 {      
   z-index: 2000;
   width: 35%;
   margin:0 auto;

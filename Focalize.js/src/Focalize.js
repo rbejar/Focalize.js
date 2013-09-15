@@ -59,20 +59,37 @@ var Focalize = (function () {
    * @param $seqChildren
    */
   Focalize.$createSeqDiv = function(currSeqIdx) {    
-    var seqWidthPx = Focalize.seqNumSlides[currSeqIdx] * $("html").width();    
-    console.log(currSeqIdx);
-    console.log("HTML width "+$("html").width());
-    console.log(seqWidthPx);
+    //var seqWidthPx = Focalize.seqNumSlides[currSeqIdx] * $("html").width();
+    var seqWidthPercent = Focalize.seqNumSlides[currSeqIdx]*100;  
+    
     var $seqDiv = $("<div></div>").addClass("seqToDisplay simple-city-style");            
     
-   
+    /* Explanation regarding background-size: height is 100% so it always takes
+     * the full div, which height should be the right one in percentage to the page.
+     * width is trickier. I am using a percentage, because it is the only way I have 
+     * found to prevent really ugly issues when the user plays (or has played) with
+     * the zoom in the browser. The background width in percentage is relative to the 
+     * div, which is seqWidthPercent. But seqWidthPercent depends on the number of
+     * slides, so the background width has to depend on them too. Finally, I need the
+     * pagesWide coefficient to keep the proper aspect ratio.
+     * 
+     * This solution is not perfect, and seems to work better in Firefox tan in
+     * Chrome, but it is far better than nothing, and seems to work reasonably fine
+     * unless the zoom levels are very big or very small.*/
+    
+    
+    
     var $nonScrollElementDiv1 = $("<div></div>").addClass("backToScroll1 background-dessert")
-                                               .css({width: seqWidthPx});
+    .css({width: seqWidthPercent+"%",
+      "background-size":0.83*100/Focalize.seqNumSlides[currSeqIdx]+"% 100%"});
+          
     var $nonScrollElementDiv2 = $("<div></div>").addClass("backToScroll2 background-skyscrapers")
-    .css({width: seqWidthPx}); 
+    .css({width: seqWidthPercent+"%",  
+      "background-size":1.35*100/Focalize.seqNumSlides[currSeqIdx]+"% 100%"});
     
     var $nonScrollElementDiv3 = $("<div></div>").addClass("backToScroll3 background-houses")
-    .css({width: seqWidthPx});
+    .css({width: seqWidthPercent+"%", 
+     "background-size":1.7*100/Focalize.seqNumSlides[currSeqIdx]+"% 100%"});
     
         
     var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
@@ -144,7 +161,7 @@ var Focalize = (function () {
     
     var addSlideToDisplay = function() {      
       $(".seqToDisplay").append($slideToDisplay);
-      $(".text-seq-templ-1").fitText();
+      $(".simplecity-slide-style-1").fitText();
       removeCurrentSlide();      
     };
     
@@ -160,11 +177,29 @@ var Focalize = (function () {
       //var $scrollingBack = $(".scrollingBack");      
       //$scrollingBack.spStop();
       
-      if (nextSlideInSeq) {
-        $(".backToScroll1").transition({ x: "-="+$("html").width()/5+"px" }, "slow");
-        $(".backToScroll2").transition({ x: "-="+$("html").width()/4+"px" }, "slow");
-        $(".backToScroll3").transition({ x: "-="+$("html").width()/2+"px" }, "slow");
+      console.log("HTML WIDTH: "+$("html").width());
+      console.log("HTML INNER WIDTH: "+$("html").innerWidth());
+      console.log("HTML OUTER WIDTH: "+$("html").outerWidth());
+      console.log("BODY WIDTH: "+$("body").width());
+      console.log("doc WIDTH: "+$("document").width());
+      console.log("WINDOW WIDTH: "+$(window).width());
+      console.log("WINDOW INNER WIDTH: "+$(window).innerWidth());
+      console.log("WINDOW OUTER WIDTH: "+$(window).outerWidth());
+      console.log("no jquery screen WIDTH: "+screen.width);
+      console.log("no jquery window innerwidth: "+window.innerWidth);
+      
+      
 
+      var asixth = Math.floor($("html").width()/6);
+      var afifth = Math.floor($("html").width()/5);
+      var athird = Math.floor($("html").width()/3);
+      var ahalf = Math.floor($("html").width()/2);
+      
+      if (nextSlideInSeq) {
+        $(".backToScroll1").transition({ x: "-="+asixth+"px" }, "slow");
+        $(".backToScroll2").transition({ x: "-="+afifth+"px" }, "slow");
+        $(".backToScroll3").transition({ x: "-="+ahalf+"px" }, "slow");
+         
         /*$scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
         });*/       
@@ -172,9 +207,9 @@ var Focalize = (function () {
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
       } else if (prevSlideInSeq) {       
-        $(".backToScroll1").transition({ x: "+="+$("html").width()/5+"px" }, "slow");
-        $(".backToScroll2").transition({ x: "+="+$("html").width()/4+"px" }, "slow");
-        $(".backToScroll3").transition({ x: "+="+$("html").width()/2+"px" }, "slow");
+        $(".backToScroll1").transition({ x: "+="+asixth+"px" }, "slow");
+        $(".backToScroll2").transition({ x: "+="+afifth+"px" }, "slow");
+        $(".backToScroll3").transition({ x: "+="+ahalf+"px" }, "slow");
                 
         /*$scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
@@ -182,7 +217,7 @@ var Focalize = (function () {
 
         $slideToRemove.css({position : "absolute", width : "100%"})
         .transition({ x: "+="+$("html").width()+"px" }, "slow", addSlideToDisplay);
-      } else { // IS A NEW SEQUENCE
+      } else { // IS A NEW SEQUENCE        
       }
     }
     
@@ -237,7 +272,12 @@ var Focalize = (function () {
       Focalize.seqNumSlides[i] = $currSeqSlides.length;
       for (var j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
-        var $slideChildren = Focalize.$slides[Focalize.numSlides].find("h1,h2,h3").addClass("text-seq-templ-1");
+        var $slideChildren = Focalize.$slides[Focalize.numSlides].find("h1,h2,h3").addClass("simplecity-slide-style-1");
+        
+        
+        var $billBoard = $("<div></div>").addClass("foreground-billboard");
+        $slideChildren = $slideChildren.add($billBoard);
+        
         Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren);        
         Focalize.numSlides += 1;
       }     
