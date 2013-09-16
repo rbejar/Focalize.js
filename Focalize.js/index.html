@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">  
+  <meta charset="UTF-8"></meta>
+  <link rel="stylesheet" type="text/css" href="focalizejs-style.css">
+  <link rel="stylesheet" type="text/css" href="simple-city-style/simple-city-style.css">
+    
   <script src="lib/box2d.js"></script>
   <script src="lib/jquery-2.0.3.js"></script>
   <script src='lib/jquery.transit.js'></script>
@@ -11,81 +14,31 @@
   <script src="lib/jquery.spritely.js"></script>
   <script src="src/jquery.physix2d.js"></script>
   <script src="src/Focalize.js"></script>
-  <link rel="stylesheet" type="text/css" href="focalizejs-style.css">
-  <link rel="stylesheet" type="text/css" href="simple-city-style/simple-city-style.css">
-  
-  <style type="text/css" media="screen">
-   /*
-    .scrollback-seq-templ-1 {
-      position: fixed;
-      top: 250px;
-      left: 0;
-      height: 94px;   
-      overflow: hidden;
-      z-index: -100;
-    }
-    
-    .back-seq-templ-1 {
-      position: fixed;
-      top: 100px;
-      left: 0;      
-      height: 312px;  
-      overflow: hidden;     
-      z-index: -90;
-    }
-  */      
-  </style>
+  <script>Focalize.loadPresentation('simple-city-style/simple-city-style.json');</script>
 </head>
 <body>
-<button id="view-fullscreen" onclick="Focalize.start()">Click me to start your full screen presentation!</button> 
-
 <!-- EN HTML5 HAY HEADERS Y FOOTERS, SE PUEDEN APROVECHAR -->
 <!-- TAMBIÉN HAY ASIDE QUE SE PUEDE USAR PARA NOTAS DEL ORADOR -->
 <!-- TAMBIÉN HAY NAV PARA EL ÍNDICE DE LA PRESENTACIÓN -->
 
 <div class="focalize-presentation">
-  <div class="focalize-sequence" data-seq-templ="simple-city-style">          
-        <section class="focalize-slide" id="slide1">
+  <div class="focalize-sequence" data-seq-name="SimpleCitySequence1">          
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
           <h1>This is the title of the first slide. It should not be
           too long, but this is your presentation...</h1>
-          <h3>It may have other stuff</h3>
         </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Transpa 2 - Título</h1>
             Y contenido de la dos
             <q>Una quotation</q>
         </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Transpa 3 - Título</h1>            
         </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
-            <h1>Transpa 4 - Título</h1>            
-        </section>
-        <section class="focalize-slide" data-seq-templ="simplecity-basicslide">
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Transpa 4 - Título</h1>            
         </section>
   </div>
-<!--  <div class="focalize-sequence" data-seq-templ="seq-templ-2">
-    <section class="focalize-slide" id="slide3"><h1>Esta es la última traspa</h1></section>
-  </div>-->  
 </div>
 </body>
 </html>

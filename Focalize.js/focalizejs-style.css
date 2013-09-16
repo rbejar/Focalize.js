@@ -15,7 +15,7 @@ section.focalize-slide {
   z-index: 500;
 } 
 
-/***********************************/
+/*---------------------------------*/
 /* Required by the jSlabify plugin */
 .slabified .slabbedtext
         {
@@ -37,4 +37,4 @@ section.focalize-slide {
         {
         display:block;
         }
-/***********************************/
+/*---------------------------------*/

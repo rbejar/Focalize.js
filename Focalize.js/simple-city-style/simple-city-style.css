@@ -1,5 +1,9 @@
-/* Style basics */
-div.simple-city-style {
+/* ******************* */
+/* SimpleCitySequence1 */
+/* ******************* */
+
+/* Sequence container */
+div.simple-city-seq1-container {
   position: fixed;
   top: 0;
   left: 0;
@@ -56,8 +60,8 @@ div.background-houses {
 } 
 
 
-/* Slide commons (for several or all types of slides in the style) */
-.simple-city-slide-common {
+/* Slide commons for slides in sequence1 */
+.simple-city-seq1-slide {
   position: fixed;
   top : 0;
   left: 0;      
@@ -92,9 +96,9 @@ div.foreground-billboard-textarea {
 } 
 
 
-/* SLIDE STYLE 1: simplecity-slide-style-1 */
+/* SLIDE STYLE 1: simple-city-seq1-slide1 */
 
-h1.simplecity-slide-style-1 {
+h1.simple-city-seq1-slide1 {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -110,18 +114,21 @@ h1.simplecity-slide-style-1 {
   
   /* It seems that jSlabify does not take into consideration shadows to measure
   font sizes so characters like p do not have full shadows... */ 
-  /*text-shadow: 1px 1px 2px #333333;*/  
-    
+  /*text-shadow: 1px 1px 2px #333333;*/      
 }
 
-h2.simplecity-slide-style-1 {
+h2.simple-city-seq1-slide1 {
   width: 40%;
   margin:0 auto;
   color: white;
 }
 
-h3.simplecity-slide-style-1 {      
+h3.simple-city-seq1-slide1 {      
   width: 35%;
   margin:0 auto;
   color: white;
 }
+
+/* ************************** */
+/* End of SimpleCitySequence1 */
+/* ************************** */

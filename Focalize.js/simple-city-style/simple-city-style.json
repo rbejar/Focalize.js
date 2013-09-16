@@ -1,0 +1,32 @@
+{  
+  "_comments": "Image sizes in pixels. If SVG, size in pixels at 100 dpi.ScrollSpeed between 0 (no scroll) and 1 (max speed)", 
+  "styleName": "SimpleCity",  
+  "sequences":[
+    { "name": "SimpleCitySequence1",
+      "containerCSSClass": "simple-city-seq1-container",
+      "slideCommonsCSSClass" : "simple-city-seq1-slide",
+      "backgroundLayers":[
+      { "cssClass": "background-dessert",            
+        "imageWidth" : 1371,
+        "imageHeight" : 530,
+        "scrollSpeed" : 0.16,
+        "pagesWide" : 0.83},       
+      { "cssClass": "background-skyscrapers",            
+        "imageWidth" : 2225,
+        "imageHeight" : 705,
+        "scrollSpeed" : 0.2,
+        "pagesWide" : 1.35},
+      { "cssClass": "background-houses",            
+        "imageWidth" : 2814,
+        "imageHeight" : 417,
+        "scrollSpeed" : 0.5,
+        "pagesWide" : 1.7}
+      ]    
+    }  
+  ],
+  "slides":[
+    {"name": "SimpleCitySlide1",
+    "applicableToSeqs": ["SimpleCitySequence1"],
+    "cssClass": "simple-city-seq1-slide1"}
+  ]
+}

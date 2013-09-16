@@ -13,9 +13,47 @@ var Focalize = (function () {
   Focalize.seqChanges = [],
   Focalize.numSeqs = 0,
   Focalize.$seqs = [];
+  Focalize.seqNames = [];
   Focalize.seqNumSlides = []; 
   Focalize.$slideDivs = [];
+  Focalize.slideNames = [];
+  Focalize.styleConfiguration = {};
   
+  Focalize.loadPresentation = function(styleJSON_URL) {
+    // I can't put this code inside the start function because
+    // if I try to call fullScreen inside the getJSON callback
+    // (to make sure the JSON is loaded before creating anything)
+    // the browser says fullScreen has not been called in a
+    // function triggered by a user event
+    
+    
+    // This code is just to prevent Firefox from reporting a not 
+    // well formedJSON file, even when the JSON is OK.
+    $.ajaxSetup({beforeSend: function(xhr){
+      if (xhr.overrideMimeType) {
+        xhr.overrideMimeType("application/json");
+      }
+    }});
+    // ------------------
+    
+    // PRELOAD IMAGES...
+    
+    // TODO: this does not work in Chromium, as its default policy is not
+    // allowing AJAX request on local files. I haven't found a good solution,
+    // probably I will end up wrapping the JSON in a JavaScript file and
+    // loading it before Focalize.js
+    $.getJSON(styleJSON_URL, function(data) {
+      Focalize.styleConfiguration = data;
+      // And after everything is loaded, we allow the user to start
+      $("body").append("<button id='view-fullscreen' onclick='Focalize.start()'>Click me to start your full screen presentation!</button>")
+    });
+  }
+  
+  /**
+   * Returns the index of the sequence that contains the slide slideIdx
+   * (slide indexes start at 0)
+   * @param slideIdx
+   */
   Focalize.seqOfSlide = function(slideIdx) {        
     for (var i = 1; i < Focalize.seqChanges.length; i++) {
       if (slideIdx < Focalize.seqChanges[i]) {
@@ -24,11 +62,36 @@ var Focalize = (function () {
     }
     return 0;
   };
-
   
-  Focalize.start = function () {
-    // PRECARGAR IMAGENES ETC.?
-    
+  /**
+   * Returns the configuration data for the sequence which index is seqIdx
+   * @param seqIdx
+   */
+  Focalize.seqConfigData = function(seqIdx) {
+    for (var i = 0; i < Focalize.styleConfiguration.sequences.length; i++) {
+      if (Focalize.styleConfiguration.sequences[i].name === Focalize.seqNames[seqIdx]) {
+        return Focalize.styleConfiguration.sequences[i];
+      }
+    }
+    throw "Sequence configuration data not found for seqIdx " + seqIdx;
+    return null;
+  };
+
+  /**
+   * Returns the configuration data for the slide which index is slideIdx
+   * @param slideIdx
+   */
+  Focalize.slideConfigData = function(slideIdx) {
+    for (var i = 0; i < Focalize.styleConfiguration.slides.length; i++) {      
+      if (Focalize.styleConfiguration.slides[i].name === Focalize.slideNames[slideIdx]) {
+        return Focalize.styleConfiguration.slides[i];
+      }
+    }
+    throw "Slide configuration data not found for slideIdx " + slideIdx;
+    return null;
+  };
+  
+  Focalize.start = function () {   
     $(document).ready(function(){
       // Go to full screen
       $(document).fullScreen(true);
@@ -51,64 +114,60 @@ var Focalize = (function () {
           // "resetearla" y explicar al usuario lo que puede hacer
         }    
       });  
-    });    
+    });
   };
   
   /**
    * Creates background and other elements common for a sequence of slides
-   * @param $seqChildren
+   * @param seqIdx Which sequence? 
    */
-  Focalize.$createSeqDiv = function(currSeqIdx) {    
-    //var seqWidthPx = Focalize.seqNumSlides[currSeqIdx] * $("html").width();
-    var seqWidthPercent = Focalize.seqNumSlides[currSeqIdx]*100;  
+  Focalize.$createSeqDiv = function(seqIdx) {
+    var seqConfigData = Focalize.seqConfigData(seqIdx);    
     
-    var $seqDiv = $("<div></div>").addClass("seqToDisplay simple-city-style");            
+    //var seqWidthPx = Focalize.seqNumSlides[currSeqIdx] * $("html").width();
+    var seqWidthPercent = Focalize.seqNumSlides[seqIdx]*100;  
+    
+    var $seqDiv = $("<div></div>").addClass("seqToDisplay " + seqConfigData.containerCSSClass);
+    
+    var $backgroundDiv = $("<div></div>").addClass("backgroundDiv");
     
     /* Explanation regarding background-size: height is 100% so it always takes
      * the full div, which height should be the right one in percentage to the page.
-     * width is trickier. I am using a percentage, because it is the only way I have 
+     * Width is trickier. I am using a percentage, because it is the only way I have 
      * found to prevent really ugly issues when the user plays (or has played) with
      * the zoom in the browser. The background width in percentage is relative to the 
      * div, which is seqWidthPercent. But seqWidthPercent depends on the number of
      * slides, so the background width has to depend on them too. Finally, I need the
      * pagesWide coefficient to keep the proper aspect ratio.
      * 
-     * This solution is not perfect, and seems to work better in Firefox tan in
+     * This solution is not perfect, and seems to work slightly better in Firefox than in
      * Chrome, but it is far better than nothing, and seems to work reasonably fine
      * unless the zoom levels are very big or very small.*/
-    
-    
-    
-    var $nonScrollElementDiv1 = $("<div></div>").addClass("backToScroll1 background-dessert")
-    .css({width: seqWidthPercent+"%",
-      "background-size":0.83*100/Focalize.seqNumSlides[currSeqIdx]+"% 100%"});
-          
-    var $nonScrollElementDiv2 = $("<div></div>").addClass("backToScroll2 background-skyscrapers")
-    .css({width: seqWidthPercent+"%",  
-      "background-size":1.35*100/Focalize.seqNumSlides[currSeqIdx]+"% 100%"});
-    
-    var $nonScrollElementDiv3 = $("<div></div>").addClass("backToScroll3 background-houses")
-    .css({width: seqWidthPercent+"%", 
-     "background-size":1.7*100/Focalize.seqNumSlides[currSeqIdx]+"% 100%"});
-    
+    for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
+      var $backLayerDiv =  $("<div></div>").addClass(seqConfigData.backgroundLayers[i].cssClass
+                                                     +" backToScroll"+i)
+      .css({width: seqWidthPercent+"%",
+        "background-size":seqConfigData.backgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"});
+       $seqDiv.append($backLayerDiv);
+    }
+    $seqDiv.append($backgroundDiv);    
+   
         
-    var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
+    //var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
     // spritely scrolls fine with a width of 100%, but I need this for the
     // changes between slides
     //var $scrollElementDiv = $("<div></div>").addClass("scrollingBack scrollback-seq-templ-1")
     //                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x"});
     
-    $seqDiv.append($nonScrollElementDiv1);
-    $seqDiv.append($nonScrollElementDiv2);
-    $seqDiv.append($nonScrollElementDiv3);
-    $seqDiv.append($backgroundDiv);    
+
     //$backgroundDiv.append($scrollElementDiv);
     //$scrollElementDiv.pan({fps: 30, speed: 1, dir: 'left'});
     return $seqDiv;
   };
   
-  Focalize.$createSlideDiv = function($slideChildren) {
-    var $slideDiv = $("<div></div>").addClass("simple-city-slide-common");
+  Focalize.$createSlideDiv = function($slideChildren, seqIdx) {
+    var $slideDiv = $("<div></div>")
+                    .addClass(Focalize.seqConfigData(seqIdx).slideCommonsCSSClass);
     $slideDiv.append($slideChildren);
     return $slideDiv;
   };
@@ -161,11 +220,11 @@ var Focalize = (function () {
     
     var addSlideToDisplay = function() {      
       $(".seqToDisplay").append($slideToDisplay);
-      
-      $(".simplecity-slide-style-1").jSlabify({fixedHeight:true, constrainHeight: true, 
-                                               hCenter: true, vCenter: true,                                                
-                                               maxWordSpace: 0.9,
-                                               maxLetterSpace: 1.2 });
+      $("."+Focalize.slideConfigData(newSlideIdx).cssClass)
+        .jSlabify({fixedHeight:true, constrainHeight: true, 
+                   hCenter: true, vCenter: true,                                                
+                   maxWordSpace: 0.9,
+                   maxLetterSpace: 1.2 });
       /* maxWordSpace defaults to 3 and maxLetterSpace defaults to 1.5, 
        * and I think that is too much, at least for
        * the titles. Maybe this could be configured in the style json file.
@@ -189,31 +248,18 @@ var Focalize = (function () {
       // In first slide...
       addSlideToDisplay(); 
     } else { 
-      //var $scrollingBack = $(".scrollingBack");      
-      //$scrollingBack.spStop();
-      
-      console.log("HTML WIDTH: "+$("html").width());
-      console.log("HTML INNER WIDTH: "+$("html").innerWidth());
-      console.log("HTML OUTER WIDTH: "+$("html").outerWidth());
-      console.log("BODY WIDTH: "+$("body").width());
-      console.log("doc WIDTH: "+$("document").width());
-      console.log("WINDOW WIDTH: "+$(window).width());
-      console.log("WINDOW INNER WIDTH: "+$(window).innerWidth());
-      console.log("WINDOW OUTER WIDTH: "+$(window).outerWidth());
-      console.log("no jquery screen WIDTH: "+screen.width);
-      console.log("no jquery window innerwidth: "+window.innerWidth);
-      
-      
 
-      var asixth = Math.floor($("html").width()/6);
-      var afifth = Math.floor($("html").width()/5);
-      var athird = Math.floor($("html").width()/3);
+     
       var ahalf = Math.floor($("html").width()/2);
+      var seqConfigData = Focalize.seqConfigData(newSeqIdx);
       
       if (nextSlideInSeq) {
-        $(".backToScroll1").transition({ x: "-="+asixth+"px" }, "slow");
-        $(".backToScroll2").transition({ x: "-="+afifth+"px" }, "slow");
-        $(".backToScroll3").transition({ x: "-="+ahalf+"px" }, "slow");
+        for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
+          $(".backToScroll"+i).transition({ x: "-="+
+                                Math.floor($("html").width()*
+                                 seqConfigData.backgroundLayers[i].scrollSpeed)
+                                +"px" }, "slow");
+        }  
          
         /*$scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
@@ -222,9 +268,12 @@ var Focalize = (function () {
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
       } else if (prevSlideInSeq) {       
-        $(".backToScroll1").transition({ x: "+="+asixth+"px" }, "slow");
-        $(".backToScroll2").transition({ x: "+="+afifth+"px" }, "slow");
-        $(".backToScroll3").transition({ x: "+="+ahalf+"px" }, "slow");
+        for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
+          $(".backToScroll"+i).transition({ x: "+="+
+                                Math.floor($("html").width()*
+                                 seqConfigData.backgroundLayers[i].scrollSpeed)
+                                +"px" }, "slow");
+        }  
                 
         /*$scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
@@ -235,8 +284,6 @@ var Focalize = (function () {
       } else { // IS A NEW SEQUENCE        
       }
     }
-    
-    
     
     
     Focalize.currSlideIdx = newSlideIdx;
@@ -261,10 +308,7 @@ var Focalize = (function () {
   };
   
   
-  Focalize.fullScreenStart = function () {   
-    // width será la pantalla (si en full screen). height será cero si no hay elementos
-    //alert($("html").width()+","+$("html").height());
-    
+  Focalize.fullScreenStart = function () {     
     var $allSeqs = $(".focalize-sequence");
     
     Focalize.$slides = [];
@@ -272,6 +316,7 @@ var Focalize = (function () {
     Focalize.seqChanges = []; // indexes of the slides that start a new sequence
     Focalize.numSeqs = $allSeqs.size();
     Focalize.$seqs = [];
+    Focalize.seqNames = [];
     Focalize.seqNumSlides = []; // number of slides in each sequence
     // Only for the first slide, current slide and seq are -1
     Focalize.currSlideIdx = -1;
@@ -283,23 +328,22 @@ var Focalize = (function () {
       var $currSeq = $(".focalize-sequence").eq(i);
       var $currSeqSlides = $currSeq.find(".focalize-slide");
       Focalize.$seqs[i] = $currSeq;
+      Focalize.seqNames[i] = $currSeq.data('seq-name');      
       Focalize.seqChanges[i] = Focalize.numSlides;
       Focalize.seqNumSlides[i] = $currSeqSlides.length;
       for (var j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
-        var $slideChildren1 = Focalize.$slides[Focalize.numSlides].find("h1").addClass("simplecity-slide-style-1");
-        var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simplecity-slide-style-1");        
+        Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
+        var $slideChildren1 = Focalize.$slides[Focalize.numSlides].find("h1").addClass("simple-city-seq1-slide1");
+        var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simple-city-seq1-slide1");        
         var $billBoard = $("<div></div>").addClass("foreground-billboard");        
         var $billBoardTextArea = $("<div></div>").addClass("foreground-billboard-textarea");
         $billBoardTextArea.append($slideChildren1);
         $billBoard.append($billBoardTextArea);
         
         var $slideChildren = $slideChildren23.add($billBoard);
-        
-        
-        
-        
-        Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren);        
+
+        Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
         Focalize.numSlides += 1;
       }     
     }
