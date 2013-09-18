@@ -172,6 +172,56 @@ var Focalize = (function () {
     return $slideDiv;
   };
   
+  Focalize.$createTitleDiv = function($slideChildren, slideIdx) {
+    var $titleDiv = $("<div></div>")
+                    .addClass(Focalize.slideConfigData(slideIdx).titleLayerCSSClass);       
+    var $titleTextAreaDiv = $("<div></div>")
+                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);
+    
+    $titleTextAreaDiv.append($slideChildren);
+    $titleDiv.append($titleTextAreaDiv);
+    return $titleDiv;  
+  };
+  
+  Focalize.$createContentDiv = function(slideIdx) {
+
+    
+    
+    var $contentDiv = $("<div></div>")
+                    .addClass(Focalize.slideConfigData(slideIdx).contentLayerCSSClass);
+    
+    var $contentTextAreaDiv = $("<div></div>")
+                            .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaCSSClass);
+    
+    var $h2h3h4 = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4")
+      .addClass(Focalize.slideConfigData(slideIdx).cssClass);
+    
+    var numRows = $h2h3h4.length;
+    
+    for (var i = 0; i < numRows; i++) {
+      var $bulletPointDiv = $("<div></div>")
+        .css({
+          position: "absolute",
+          top: i*100/numRows+"%",   
+          left: 0,     
+          width: "100%",      
+          height: (100/numRows)-4+"%",
+          overflow: "hidden",
+          "z-index": 201,
+          background: "transparent",  
+        });
+      $bulletPointDiv.append($h2h3h4.eq(i));
+      $contentTextAreaDiv.append($bulletPointDiv);
+    }
+    
+    // Could I use a layout plugin? My first tests with jLayout have
+    // not been very successful, and my needs do not seem complex...
+    
+    
+    $contentDiv.append($contentTextAreaDiv);
+    return $contentDiv;  
+  }; 
+  
   /**
    * Show slide with index newSlideIdx. The exact behaviour will depend
    * on if there is a change of sequence, and if it is a "next" or "previous"
@@ -220,6 +270,7 @@ var Focalize = (function () {
     
     var addSlideToDisplay = function() {      
       $(".seqToDisplay").append($slideToDisplay);
+      
       $("."+Focalize.slideConfigData(newSlideIdx).cssClass)
         .jSlabify({fixedHeight:true, constrainHeight: true, 
                    hCenter: true, vCenter: true,                                                
@@ -334,14 +385,28 @@ var Focalize = (function () {
       for (var j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
         Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
-        var $slideChildren1 = Focalize.$slides[Focalize.numSlides].find("h1").addClass("simple-city-seq1-slide1");
-        var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simple-city-seq1-slide1");        
-        var $billBoard = $("<div></div>").addClass("foreground-billboard");        
-        var $billBoardTextArea = $("<div></div>").addClass("foreground-billboard-textarea");
-        $billBoardTextArea.append($slideChildren1);
-        $billBoard.append($billBoardTextArea);
         
-        var $slideChildren = $slideChildren23.add($billBoard);
+        var $titleH1 = Focalize.$slides[Focalize.numSlides].find("h1")
+                        .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);              
+        var $titleDiv = Focalize.$createTitleDiv($titleH1, Focalize.numSlides);        
+        var $slideChildren = $titleDiv;
+        
+        //Focalize.$slides[Focalize.numSlides].find("ul,li")
+        //                  .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);        
+        // This takes the first ul in the current slid and makes a deep copy (that
+        // includes every children). without the clone() this does not keep the
+        // children, only the ul itself seems to be selected. That is the reason why
+        // this clone is not need with elements without children, like the H1
+        // I DO NOT UNDERSTAND THIS VERY WELL...
+        //var $contentUL = Focalize.$slides[Focalize.numSlides].find("ul").eq(0).clone();
+        
+        
+        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);        
+        
+        
+        $slideChildren = $slideChildren.add($contentDiv);
+        
+        //var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simple-city-seq1-slide1");        
 
         Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
         Focalize.numSlides += 1;

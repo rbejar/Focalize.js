@@ -27,6 +27,10 @@
   "slides":[
     {"name": "SimpleCitySlide1",
     "applicableToSeqs": ["SimpleCitySequence1"],
-    "cssClass": "simple-city-seq1-slide1"}
+    "cssClass": "simple-city-seq1-slide1",
+    "titleLayerCSSClass": "foreground-billboard",
+    "titleTextAreaCSSClass": "foreground-billboard-textarea",
+    "contentLayerCSSClass": "foreground-trafficsign",
+    "contentTextAreaCSSClass": "foreground-trafficsign-textarea"}
   ]
 }
