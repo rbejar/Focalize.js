@@ -1,3 +1,21 @@
+/*
+    Focalize.js - Dynamic HTML5 presentations
+    Copyright (C) 2013 Rubén Béjar {http://www.rubenbejar.com/}
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see {http://www.gnu.org/licenses/}.
+ */
+
 var Focalize = (function () {
   var Focalize = {},
     privateVariable = 1;
@@ -19,6 +37,14 @@ var Focalize = (function () {
   Focalize.slideNames = [];
   Focalize.styleConfiguration = {};
   
+  /**
+   * Used to start the presentation from a style JSON file. As this
+   * causes trouble with Chrome/ium on local files (a common use
+   * case) this should not be used. I am keeping it just as a
+   * reference and a reminder, but I show it as deprecated
+   * @param styleJSON_URL
+   * @deprecated
+   */
   Focalize.loadPresentation = function(styleJSON_URL) {
     // I can't put this code inside the start function because
     // if I try to call fullScreen inside the getJSON callback
@@ -26,7 +52,7 @@ var Focalize = (function () {
     // the browser says fullScreen has not been called in a
     // function triggered by a user event
     
-    
+    $(document).ready(function(){
     // This code is just to prevent Firefox from reporting a not 
     // well formedJSON file, even when the JSON is OK.
     $.ajaxSetup({beforeSend: function(xhr){
@@ -34,20 +60,23 @@ var Focalize = (function () {
         xhr.overrideMimeType("application/json");
       }
     }});
-    // ------------------
-    
-    // PRELOAD IMAGES...
-    
-    // TODO: this does not work in Chromium, as its default policy is not
-    // allowing AJAX request on local files. I haven't found a good solution,
-    // probably I will end up wrapping the JSON in a JavaScript file and
-    // loading it before Focalize.js
+
+    // This does not work in Chromium, as its default policy is not
+    // allowing AJAX request on local files. I haven't found a good solution
     $.getJSON(styleJSON_URL, function(data) {
       Focalize.styleConfiguration = data;
-      // And after everything is loaded, we allow the user to start
-      $("body").append("<button id='view-fullscreen' onclick='Focalize.start()'>Click me to start your full screen presentation!</button>")
+      // And after the JSON file is loaded, we actually allow the user
+      // to load the presentation
+      Focalize.load();
     });
-  }
+    });
+  };
+  
+  Focalize.load = function() {      
+    $(document).ready(function(){
+      $("body").append("<button id='view-fullscreen' onclick='Focalize.start()'>Click me to start your full screen presentation!</button>");
+    });
+  };
   
   /**
    * Returns the index of the sequence that contains the slide slideIdx
@@ -141,7 +170,7 @@ var Focalize = (function () {
      * pagesWide coefficient to keep the proper aspect ratio.
      * 
      * This solution is not perfect, and seems to work slightly better in Firefox than in
-     * Chrome, but it is far better than nothing, and seems to work reasonably fine
+     * Chromium, but it is far better than nothing, and seems to work reasonably fine
      * unless the zoom levels are very big or very small.*/
     for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
       var $backLayerDiv =  $("<div></div>").addClass(seqConfigData.backgroundLayers[i].cssClass
@@ -183,23 +212,24 @@ var Focalize = (function () {
     return $titleDiv;  
   };
   
-  Focalize.$createContentDiv = function(slideIdx) {
-
+  
+  Focalize.layoutContent = function(slideIdx, content) {
     
+    // Content is an array, because order does matter
+    //var content = [
+    //{
+    //  type: "h2", /* h2, h3, h4, p, ... THINK ABOUT THIS */
+    //  $element: {}, /* jQuery object */      
+    //}                   
+    //];
     
-    var $contentDiv = $("<div></div>")
-                    .addClass(Focalize.slideConfigData(slideIdx).contentLayerCSSClass);
+    var $bulletPointDiv = null;
+    var $contentBulletPoints = $();
     
-    var $contentTextAreaDiv = $("<div></div>")
-                            .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaCSSClass);
-    
-    var $h2h3h4 = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4")
-      .addClass(Focalize.slideConfigData(slideIdx).cssClass);
-    
-    var numRows = $h2h3h4.length;
-    
+    var numRows = content.length;
+    // CHECK MAGIC NUMBERS IN THE CODE...
     for (var i = 0; i < numRows; i++) {
-      var $bulletPointDiv = $("<div></div>")
+      $bulletPointDiv = $("<div></div>")
         .css({
           position: "absolute",
           top: i*100/numRows+"%",   
@@ -210,13 +240,39 @@ var Focalize = (function () {
           "z-index": 201,
           background: "transparent",  
         });
-      $bulletPointDiv.append($h2h3h4.eq(i));
-      $contentTextAreaDiv.append($bulletPointDiv);
+      $bulletPointDiv.append(content[i].$element
+                              .addClass(Focalize.slideConfigData(slideIdx).cssClass));
+      $contentBulletPoints = $contentBulletPoints.add($bulletPointDiv);
     }
+    
+
+    
+    return $contentBulletPoints;
+    
+    
+  };
+  
+  Focalize.$createContentDiv = function(slideIdx) {
+    var $contentDiv = $("<div></div>")
+                    .addClass(Focalize.slideConfigData(slideIdx).contentLayerCSSClass);
+    var $contentTextAreaDiv = $("<div></div>")
+                            .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaCSSClass);
+    
+    var content = [];
+    
+    var $h2 = Focalize.$slides[Focalize.numSlides].find("h2");
+    var numH2 = $h2.length;    
+    for (var i = 0; i < numH2; i++) {
+      content[i] = {};
+      content[i].type = "h2";
+      content[i].$element = $h2.eq(i);      
+    }
+    
+    var $contentContents = Focalize.layoutContent(slideIdx, content);
+    $contentTextAreaDiv.append($contentContents);
     
     // Could I use a layout plugin? My first tests with jLayout have
     // not been very successful, and my needs do not seem complex...
-    
     
     $contentDiv.append($contentTextAreaDiv);
     return $contentDiv;  
@@ -268,14 +324,16 @@ var Focalize = (function () {
     var $slideToRemove = $(".slideToDisplay");    
     
     
-    var addSlideToDisplay = function() {      
+    var addSlideToDisplay = function() {    
+      removeCurrentSlide();    
+      
       $(".seqToDisplay").append($slideToDisplay);
       
-      $("."+Focalize.slideConfigData(newSlideIdx).cssClass)
+      /*$("."+Focalize.slideConfigData(newSlideIdx).cssClass)
         .jSlabify({fixedHeight:true, constrainHeight: true, 
                    hCenter: true, vCenter: true,                                                
                    maxWordSpace: 0.9,
-                   maxLetterSpace: 1.2 });
+                   maxLetterSpace: 1.2 });*/
       /* maxWordSpace defaults to 3 and maxLetterSpace defaults to 1.5, 
        * and I think that is too much, at least for
        * the titles. Maybe this could be configured in the style json file.
@@ -286,8 +344,43 @@ var Focalize = (function () {
       // Neither of them takes into consideration 
       // vertical space, so they do not seem to offer
       // anything better for my needs than jSlabify.
+      
+      // RESPONSIVE MEASURE must be applied to selectors that include a single element
+      //$("h1").
+      //  responsiveMeasure({
+        // Variables you can pass in:
+        /*idealLineLength: (defaults to 66),
+        minimumFontSize: (defaults to 16),
+        maximumFontSize: (defaults to 300),
+        ratio: (defaults to 4/3)*/
+      //})
+      
+      // PARECE QUE EL QUE MÁS ME GUSTA ES ESTE (HACE LO
+      // MISMO QUE JSLABIFY, INCLUYENDO ADAPTARSE A ANCHO Y ALTO
+      // PERO EL RESULTADO ME GUSTA MÁS (PERO DESDE LUEGO DISTA
+      // MUCHO DE SER PERFECTO PARA LO QUE BUSCO. POR EJEMPLO
+      // ES CAPAZ DE DEJAR UNA PALABRA SUELTA EN UNA LÍNEA DESPUÉS
+      // DE HABER LLENADO LA ANTERIOR)
+      textFit($("h1"));
+      textFit($("h2"));
+      
+      // Tras aplicar el textFit a los H2, ver cual tiene
+      // el font-size menor, y aplicárselo a todos, para que todos
+      // tengan el mismo tamaño...
+      
+      var $h2textFitSpan = $("h2 > .textFitted");      
+      var min = Number.MAX_VALUE;
+      var currSize;
+      for (var i = 0; i < $h2textFitSpan.length; i++) {
+        currSize = parseFloat($h2textFitSpan.eq(i).css("font-size")); 
+        if (currSize < min) {
+          min = currSize;
+        }      
+      }
+      $h2textFitSpan.css({"font-size":min+"px"});
+      
 
-      removeCurrentSlide();      
+ 
     };
     
     var removeCurrentSlide = function() {
@@ -301,7 +394,6 @@ var Focalize = (function () {
     } else { 
 
      
-      var ahalf = Math.floor($("html").width()/2);
       var seqConfigData = Focalize.seqConfigData(newSeqIdx);
       
       if (nextSlideInSeq) {

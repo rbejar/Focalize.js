@@ -11,10 +11,14 @@
   <script src="lib/jquery.fullscreen.js"></script>
   <script src="lib/jquery.fittext.js"></script>  
   <script src="lib/jquery.jSlabify.js"></script>
+  <script src="lib/textFit.js"></script>
+  <script src="lib/jquery.rm.js"></script>
   <script src="lib/jquery.spritely.js"></script>
   <script src="src/jquery.physix2d.js"></script>
   <script src="src/Focalize.js"></script>
-  <script>Focalize.loadPresentation('simple-city-style/simple-city-style.json');</script>
+  <script src="simple-city-style/simple-city-style.js"></script>
+  <!--  <script>Focalize.loadPresentation('simple-city-style/simple-city-style.json');</script>-->
+  <script>Focalize.load();</script>
 </head>
 <body>
 <!-- EN HTML5 HAY HEADERS Y FOOTERS, SE PUEDEN APROVECHAR -->
@@ -27,7 +31,8 @@
           <h1>This is the title of the first slide. It should not be
           too long, but this is your presentation...</h1>
           <h2>This is the first point of the slide</h2>
-          <h2>Second point of the slide</h2>
+          <h2>Second point of the slide. Maybe too long, but this
+          way I can test it</h2>
           <h2>And, as expected, this is the third point. It is far longer than
               the others, so I can check how it looks like</h2>
           <!--  Using ul-li and ol-li makes my life harder, and
@@ -36,10 +41,12 @@
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Transpa 2 - Título</h1>
             Y contenido de la dos
-            <q>Una quotation</q>
+            <h2>First point of the second slide</h2>
+            <h2>And a 2nd point too</h2>
         </section>
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
-            <h1>Transpa 3 - Título</h1>            
+            <h1>Transpa 3 - Título</h1>
+            <q>Una quotation</q>            
         </section>
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Transpa 4 - Título</h1>            
