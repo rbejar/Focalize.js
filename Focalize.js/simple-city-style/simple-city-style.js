@@ -35,19 +35,28 @@ Focalize.styleConfiguration =
       { "cssClass": "background-dessert",            
         "imageWidth" : 1371,
         "imageHeight" : 530,
-        "scrollSpeed" : 0.16,
+        "scrollSpeed" : 0.1,
         "pagesWide" : 0.83},       
       { "cssClass": "background-skyscrapers",            
         "imageWidth" : 2225,
         "imageHeight" : 705,
-        "scrollSpeed" : 0.2,
+        "scrollSpeed" : 0.18,
         "pagesWide" : 1.35},
       { "cssClass": "background-houses",            
         "imageWidth" : 2814,
         "imageHeight" : 417,
         "scrollSpeed" : 0.5,
         "pagesWide" : 1.7}
-      ]    
+      ],  
+      "animatedBackgroundLayers":[
+      { "cssClass": "background-clouds",            
+        "imageWidth" : 1018,
+        "imageHeight" : 337,
+        "scrollSpeed" : 0.14, /* Like the other background layers, relative among them */
+        "framesPerSecond" : 30,
+        "panSpeed" : 1, /* In pixels per frame. */ 
+        "pagesWide" : 0.62}                           
+      ]
     }  
   ],
   "slides":[

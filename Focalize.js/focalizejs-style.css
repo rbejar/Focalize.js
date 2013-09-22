@@ -17,7 +17,8 @@ section.focalize-slide {
 
 /*---------------------------------*/
 /* Required by the jSlabify plugin */
-.slabified .slabbedtext
+/* That I currently don't use */
+/*.slabified .slabbedtext
         {
         display:-moz-inline-box;
         display:inline-block;
@@ -36,5 +37,5 @@ section.focalize-slide {
 .slabbedtextdone .slabbedtext
         {
         display:block;
-        }
+        }*/
 /*---------------------------------*/

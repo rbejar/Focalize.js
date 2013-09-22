@@ -31,6 +31,17 @@ div.background-dessert {
     has her browser with a "weird" zoom level) */
 }
 
+div.background-clouds {
+  position: fixed;
+  top: -7.6%;
+  left: 0;
+  width: 100%;      
+  height: 28.75%;
+  overflow: hidden;
+  z-index: -900;
+  background: transparent url(clouds_1018x337_100dpi.png) repeat-x;
+}
+
 div.background-skyscrapers {
   position: fixed;
   top: 4%;
@@ -75,8 +86,8 @@ div.background-houses {
 div.foreground-billboard {
   position: fixed;
   top: 3%;   
-  left: 4.5%;      
-  width: 91%;      
+  left: 11%;      
+  width: 78%;      
   height: 21%;
   overflow: hidden;
   z-index: 200;  
@@ -100,8 +111,8 @@ div.foreground-billboard-textarea {
 div.foreground-trafficsign {
   position: fixed;
   top: 30%;   
-  left: 4.5%;      
-  width: 91%;      
+  left: 11%;      
+  width: 78%;      
   height: 60%;
   overflow: hidden;
   z-index: 200;  
@@ -124,12 +135,14 @@ div.foreground-trafficsign-textarea {
 h1.simple-city-seq1-slide1 {
 	position: absolute;
 	top: 0;
-	left: 0;
+	left: 0;	
   width: 100%;
-  height: 100%;
-  text-align: center;
+  height: 100%;  
   margin:0 auto;   
   color: #111111;
+  text-align: center; /* H1 is always title, and I want them centered */
+  /* The other H2,H3,H4 may appear in different contexts, so the layout
+     algorithm will determine their alignment */
   
   line-height: 1;
   font-weight: normal;
@@ -142,25 +155,44 @@ h1.simple-city-seq1-slide1 {
 
 h2.simple-city-seq1-slide1 { 
   position: absolute;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
-  text-align: center;
+  height: 100%; 
   margin:0 auto;   
   color: #EEEEEE;
   
-  /*line-height: 1;*/
   font-weight: normal;
   font-family: Impact, Charcoal, sans-serif;
 }
 
 h3.simple-city-seq1-slide1 {      
-  width: 35%;
-  margin:0 auto;
-  color: white;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;  
+  margin:0 auto;   
+  color: #EEEEEE;  
+  
+  font-weight: normal;
+  font-family: Impact, Charcoal, sans-serif;
 }
 
+h4.simple-city-seq1-slide1 {      
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  margin:0 auto;   
+  color: #EEEEEE;
+  
+  font-weight: normal;
+  font-family: Impact, Charcoal, sans-serif;
+}
+
+/*
 ul.simple-city-seq1-slide1 {
 	list-style-type: square;
 	
@@ -188,15 +220,13 @@ li.simple-city-seq1-slide1 {
   left: 0;
   width: 100%;
   height: 100%;
-  
-    
-/*  color: #EEEEEE;*/
+
   line-height: 1;
   font-weight: normal;
   font-family: Impact, Charcoal, sans-serif;
   
 }
-
+*/
 /* ************************** */
 /* End of SimpleCitySequence1 */
 /* ************************** */

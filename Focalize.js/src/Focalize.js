@@ -17,8 +17,9 @@
  */
 
 var Focalize = (function () {
-  var Focalize = {},
-    privateVariable = 1;
+  var Focalize = {};
+  
+  //var privateVariable = 1;
 
   function privateMethod() {
     // ...
@@ -160,6 +161,8 @@ var Focalize = (function () {
     
     var $backgroundDiv = $("<div></div>").addClass("backgroundDiv");
     
+    var $backLayerDiv;
+    
     /* Explanation regarding background-size: height is 100% so it always takes
      * the full div, which height should be the right one in percentage to the page.
      * Width is trickier. I am using a percentage, because it is the only way I have 
@@ -173,24 +176,24 @@ var Focalize = (function () {
      * Chromium, but it is far better than nothing, and seems to work reasonably fine
      * unless the zoom levels are very big or very small.*/
     for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
-      var $backLayerDiv =  $("<div></div>").addClass(seqConfigData.backgroundLayers[i].cssClass
+      $backLayerDiv =  $("<div></div>").addClass(seqConfigData.backgroundLayers[i].cssClass
                                                      +" backToScroll"+i)
       .css({width: seqWidthPercent+"%",
         "background-size":seqConfigData.backgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"});
-       $seqDiv.append($backLayerDiv);
+      $backgroundDiv.append($backLayerDiv);
     }
-    $seqDiv.append($backgroundDiv);    
-   
         
-    //var $backgroundDiv = $("<div></div>").addClass("scrollback-seq-templ-1");
-    // spritely scrolls fine with a width of 100%, but I need this for the
-    // changes between slides
-    //var $scrollElementDiv = $("<div></div>").addClass("scrollingBack scrollback-seq-templ-1")
-    //                     .css({width: seqWidthPx, "background":"transparent url(assets/hill2.png) repeat-x"});
+   
+    for (var i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {
+      $backLayerDiv =  $("<div></div>").addClass(seqConfigData.animatedBackgroundLayers[i].cssClass
+                                                     +" backToScroll"+i+" backToPan"+i)
+        .css({width: seqWidthPercent+"%",
+        "background-size":seqConfigData.animatedBackgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"});        
+      $backgroundDiv.append($backLayerDiv);
+    }
     
-
-    //$backgroundDiv.append($scrollElementDiv);
-    //$scrollElementDiv.pan({fps: 30, speed: 1, dir: 'left'});
+    $seqDiv.append($backgroundDiv);
+          
     return $seqDiv;
   };
   
@@ -211,46 +214,281 @@ var Focalize = (function () {
     $titleDiv.append($titleTextAreaDiv);
     return $titleDiv;  
   };
-  
-  
-  Focalize.layoutContent = function(slideIdx, content) {
+
+  /**
+   * Lays out certain content (i.e. certain allowed HTML elements)
+   * in a div.
+   * 
+   * @param slideIdx Index of the slide which content we are laying out
+   * @param content An array of objects (order is significant). Example:
+   * [{type: "h2", 
+   *    $element: a jQueryObject},
+   *  {type: "h3",
+   *    $element: a jQueryObject}...];
+   * @param $contentDiv a jQueryObject with a div where the content will be appended
+   * @returns $contentDiv with content properly laid out and appended
+   */
+  Focalize.layoutContent = function(slideIdx, content, $contentDiv) {
+    var $contentElementDiv;
+    var $allContentElements = $();
     
-    // Content is an array, because order does matter
-    //var content = [
-    //{
-    //  type: "h2", /* h2, h3, h4, p, ... THINK ABOUT THIS */
-    //  $element: {}, /* jQuery object */      
-    //}                   
-    //];
-    
-    var $bulletPointDiv = null;
-    var $contentBulletPoints = $();
-    
-    var numRows = content.length;
-    // CHECK MAGIC NUMBERS IN THE CODE...
-    for (var i = 0; i < numRows; i++) {
-      $bulletPointDiv = $("<div></div>")
-        .css({
-          position: "absolute",
-          top: i*100/numRows+"%",   
-          left: 0,     
-          width: "100%",      
-          height: (100/numRows)-4+"%",
-          overflow: "hidden",
-          "z-index": 201,
-          background: "transparent",  
-        });
-      $bulletPointDiv.append(content[i].$element
-                              .addClass(Focalize.slideConfigData(slideIdx).cssClass));
-      $contentBulletPoints = $contentBulletPoints.add($bulletPointDiv);
+    var numElements = content.length;
+    if (numElements <= 0) {
+      return $contentDiv;
     }
     
+    // If we actually have elements to lay out... 
 
+    // Returns the layout type to use depending on the elements in content array
+    var chooseLayoutType = function() {
+      // 0: layout undefined for the current content
+      // 1: every element is h2, h3 or h4, more than one element
+      // 2: a single element, of type h2, h3 or h4
+      // 3: a single img
+      // 4: every element is an img
+      // ...      
+      
+      if (numElements <= 0) {
+        return 0;
+      }
+      
+      var onlyh2h3h4 = true;
+      var onlyimg = true;
+      var elementTypeArray = [];
+      
+      for (var i = 0; i < numElements; i++) {
+        switch (content[i].type.toUpperCase()) {
+          case "H2":            
+            elementTypeArray[i] = "H2";
+            onlyimg = false;
+            break;
+          case "H3":
+            elementTypeArray[i] = "H3";
+            onlyimg = false;
+            break;
+          case "H4":
+            elementTypeArray[i] = "H4";
+            onlyimg = false;
+            break;
+          case "IMG":
+            elementTypeArray[i] = "IMG";
+            onlyh2h3h4 = false;
+            break;
+          default:
+            elementTypeArray[i] = "UNSUPPORTED"
+            onlyh2h3h4 = false;
+            onlyimg = false;
+            break;
+        }         
+      }
+      
+      if (onlyh2h3h4) {
+        if (numElements > 1) {
+          return {layoutType:1, elementArray: elementTypeArray};
+        } else {
+          return {layoutType:2, elementArray: elementTypeArray};
+        }
+      } else if (onlyimg) {
+        return {layoutType:3, elementArray: elementTypeArray};
+      } else {
+        return {layoutType:0, elementArray: elementTypeArray};
+      }      
+    };    
     
-    return $contentBulletPoints;
+    var layoutFunctions = [];
     
+    // Layout function 0: No layout available. Show an error instead of the content
+    layoutFunctions[0] = function(elementArray) {
+      $allContentElements = $("<div><h2>NO LAYOUT AVAILABLE FOR THIS SLIDE. CHECK ITS CONTENTS.</h2><div>")
+        .css({
+          position: "absolute",
+          top: 0,   
+          left: 0,     
+          width: "100%",      
+          height: "100%",
+          overflow: "hidden",
+          color: "red",
+          "z-index": 200000,
+          background: "transparent",  
+        });
+    };
     
+    // Layout function 1: all elements are h2, h3, h4 (show like an unordered list)
+    layoutFunctions[1] = function(elementArray) {
+      // elementWeights are relative to each other
+      var elementWeights = {"H2": 1,
+                            "H3": 0.75,
+                            "H4": 0.6};  
+      // elementIndents are in percentage of the available width
+      var elementIndents = {"H2": 0,
+                            "H3": 4,
+                            "H4": 7};
+      
+      var totalRelativeHeight = 0;
+      var numElements = elementArray.length;
+      if (numElements === 0) {
+        return;
+      }      
+      
+      for (var i = 0; i < numElements; i++) {
+        totalRelativeHeight += elementWeights[elementArray[i]];
+      }  
+      
+      var numberOfGaps = numElements - 1;
+      var gapSize = 2; /*Percentage*/
+      var totalPercentHeight = 100 - (gapSize * numberOfGaps);
+      
+      var currentElementHeight;
+      var currentElementTop = 0;
+      for (var i = 0; i < numElements; i++) {     
+        currentElementHeight = (elementWeights[elementArray[i]] / totalRelativeHeight) 
+                               * totalPercentHeight;        
+        $contentElementDiv = $("<div></div>")
+          .css({
+            position: "absolute",
+            top: currentElementTop+"%",   
+            left: (0 + elementIndents[elementArray[i]])+"%",     
+            right: 0,                   
+            height: currentElementHeight+"%",
+            overflow: "hidden",
+            "z-index": 201,
+            background: "transparent",  
+          });        
+        $contentElementDiv.append(content[i].$element
+                                .addClass(Focalize.slideConfigData(slideIdx).cssClass)
+                                .css({"text-align":"left"}));
+        $allContentElements = $allContentElements.add($contentElementDiv);
+        
+        currentElementTop = currentElementTop + currentElementHeight + gapSize;
+      }        
+    };
+    
+    // Layout function 2: a single element H2, H3 or H4
+    layoutFunctions[2] = function(elementArray) {
+      $contentElementDiv = $("<div></div>")
+        .css({
+              position: "absolute",
+              top: 0,   
+              left: 0,     
+              right: 0,                   
+              bottom: 0,
+              margin: "auto",
+              overflow: "hidden",
+              "z-index": 201,
+              background: "transparent",  
+          });        
+      $contentElementDiv.append(content[0].$element
+                                  .addClass(Focalize.slideConfigData(slideIdx).cssClass))
+                                  .css({"text-align":"center"});
+      $allContentElements = $allContentElements.add($contentElementDiv);
+    };
+    
+    // Layout function 3: a single element img
+    layoutFunctions[3] = function(elementArray) {
+      $contentElementDiv = $("<div></div>")
+        .css({
+              position: "absolute",
+              top: 0,   
+              left: 0,     
+              right: 0,                   
+              bottom: 0,
+              margin: "auto",
+              overflow: "hidden",
+              "z-index": 201,
+              background: "transparent",  
+          });        
+      $contentElementDiv.append(content[0].$element
+                                  .addClass(Focalize.slideConfigData(slideIdx).cssClass));
+      $allContentElements = $allContentElements.add($contentElementDiv);
+    };
+    
+    var chosenLayout = chooseLayoutType();
+    layoutFunctions[chosenLayout.layoutType](chosenLayout.elementArray);
+       
+    return $contentDiv.append($allContentElements);
   };
+  
+  /**
+   * Fit texts, images etc. to their calculated divs.
+   * Must be called after the $slideToDisplay has been appended
+   * to its final div, so the sizes are right and the
+   * fitting may work properly
+   */
+  Focalize.adjustContents = function($slideToDisplay) {
+    // 200 as maxFontSize means: make it as big as it gets
+    // alignHoriz: true is not working for me in Firefox (it does in Chromium)
+    textFit($slideToDisplay.find("h1"), {alignVert: true, maxFontSize: 200});
+    textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, maxFontSize: 200});
+    
+    // Tras aplicar el textFit a los elementos, ver cual tiene
+    // el font-size menor en cada categoría, y aplicárselo a todos, para que todos
+    // tengan el mismo tamaño dentro de una misma categoría      
+    var minimumSize = function (elementType, currentMin) {
+      var $textFitSpan = $(elementType + " > .textFitted");
+      var min = currentMin;
+      var currSize;
+      for (var i = 0; i < $textFitSpan.length; i++) {
+        currSize = parseFloat($textFitSpan.eq(i).css("font-size")); 
+        if (currSize < min) {
+          min = currSize;
+        }      
+      }
+
+      // If min is "too big" it will not be very different from
+      // the previous elements, so we force it to be smaller.
+      // 0.15 is a magic number. Should be a style decision
+      if (min > Math.floor(currentMin - 0.15 * currentMin)) {
+        min = Math.floor(currentMin - 0.15 * currentMin);
+      }
+      $textFitSpan.css({"font-size":min+"px"});  
+      return min;
+    };
+    
+    // Llamamos en orden y así cada elemento será menor que el 
+    // de la categoría anterior
+    var currentMin = Number.MAX_VALUE;
+    currentMin = minimumSize("h2", currentMin);
+    currentMin = minimumSize("h3", currentMin);
+    currentMin = minimumSize("h4", currentMin);  
+    
+    /* Alternatives to fitText that I've tried with
+     * worse results.
+     */
+    
+//    $("."+Focalize.slideConfigData(newSlideIdx).cssClass)
+//    .jSlabify({fixedHeight:true, constrainHeight: true, 
+//               hCenter: true, vCenter: true,                                                
+//               maxWordSpace: 0.9,
+//               maxLetterSpace: 1.2 });
+//     maxWordSpace defaults to 3 and maxLetterSpace defaults to 1.5, 
+//      and I think that is too much, at least for
+//      the titles. Maybe this could be configured in the style json file.
+//        However, I can't tweak it very well: it always seems too much or too little...
+       
+  // I have also briefly tried FitText, BigText and SlabText.
+  // Neither of them takes into consideration 
+  // vertical space, so they do not seem to offer
+  // anything better for my needs than jSlabify.
+  
+  // RESPONSIVE MEASURE must be applied to selectors that include a single element
+  //$("h1").
+  //  responsiveMeasure({
+    // Variables you can pass in:
+//    idealLineLength: (defaults to 66),
+//    minimumFontSize: (defaults to 16),
+//    maximumFontSize: (defaults to 300),
+//    ratio: (defaults to 4/3)
+  //})
+  
+  // PARECE QUE EL QUE MÁS ME GUSTA ES texFit (HACE LO
+  // MISMO QUE JSLABIFY, INCLUYENDO ADAPTARSE A ANCHO Y ALTO
+  // PERO EL RESULTADO ME GUSTA MÁS (PERO DESDE LUEGO DISTA
+  // MUCHO DE SER PERFECTO PARA LO QUE BUSCO. POR EJEMPLO
+  // ES CAPAZ DE DEJAR UNA PALABRA SUELTA EN UNA LÍNEA DESPUÉS
+  // DE HABER LLENADO LA ANTERIOR)
+
+  };
+  
   
   Focalize.$createContentDiv = function(slideIdx) {
     var $contentDiv = $("<div></div>")
@@ -258,18 +496,20 @@ var Focalize = (function () {
     var $contentTextAreaDiv = $("<div></div>")
                             .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaCSSClass);
     
+    var $currElem;
     var content = [];
     
-    var $h2 = Focalize.$slides[Focalize.numSlides].find("h2");
-    var numH2 = $h2.length;    
-    for (var i = 0; i < numH2; i++) {
+    var $validContentElements = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4,img");
+    
+        
+    for (var i = 0; i < $validContentElements.length; i++) {
+      $currElem = $validContentElements.eq(i);
       content[i] = {};
-      content[i].type = "h2";
-      content[i].$element = $h2.eq(i);      
+      content[i].type = $currElem.get(0).tagName;
+      content[i].$element = $currElem;      
     }
     
-    var $contentContents = Focalize.layoutContent(slideIdx, content);
-    $contentTextAreaDiv.append($contentContents);
+    $contentTextAreaDiv = Focalize.layoutContent(slideIdx, content, $contentTextAreaDiv);    
     
     // Could I use a layout plugin? My first tests with jLayout have
     // not been very successful, and my needs do not seem complex...
@@ -310,7 +550,17 @@ var Focalize = (function () {
     if (isSeqChange) {      
       $(".seqToDisplay").remove();
       var $seqToDisplay = Focalize.$createSeqDiv(Focalize.seqOfSlide(newSlideIdx));
-      $(".focalize-presentation").after($seqToDisplay);      
+      $(".focalize-presentation").after($seqToDisplay);
+      
+      // Animate the animated layers of the new sequence      
+      var newSeqConfigData = Focalize.seqConfigData(newSeqIdx);
+      for (var i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {
+        // spritely scrolls fine with a width of 100%, but I need this width for the
+        // "scroll transitions" between slides     
+        $(".backToPan"+i).pan({fps: newSeqConfigData.animatedBackgroundLayers[i].framesPerSecond, 
+                          speed: newSeqConfigData.animatedBackgroundLayers[i].panSpeed, dir: 'left'});
+      }
+
     }
     
     // we must use clone in order to prevent making changes to our
@@ -325,62 +575,9 @@ var Focalize = (function () {
     
     
     var addSlideToDisplay = function() {    
-      removeCurrentSlide();    
-      
-      $(".seqToDisplay").append($slideToDisplay);
-      
-      /*$("."+Focalize.slideConfigData(newSlideIdx).cssClass)
-        .jSlabify({fixedHeight:true, constrainHeight: true, 
-                   hCenter: true, vCenter: true,                                                
-                   maxWordSpace: 0.9,
-                   maxLetterSpace: 1.2 });*/
-      /* maxWordSpace defaults to 3 and maxLetterSpace defaults to 1.5, 
-       * and I think that is too much, at least for
-       * the titles. Maybe this could be configured in the style json file.
-       * However, I can't tweak it very well: it always seems too much or too little...
-       */
-      
-      // I have also briefly tried FitText, BigText and SlabText.
-      // Neither of them takes into consideration 
-      // vertical space, so they do not seem to offer
-      // anything better for my needs than jSlabify.
-      
-      // RESPONSIVE MEASURE must be applied to selectors that include a single element
-      //$("h1").
-      //  responsiveMeasure({
-        // Variables you can pass in:
-        /*idealLineLength: (defaults to 66),
-        minimumFontSize: (defaults to 16),
-        maximumFontSize: (defaults to 300),
-        ratio: (defaults to 4/3)*/
-      //})
-      
-      // PARECE QUE EL QUE MÁS ME GUSTA ES ESTE (HACE LO
-      // MISMO QUE JSLABIFY, INCLUYENDO ADAPTARSE A ANCHO Y ALTO
-      // PERO EL RESULTADO ME GUSTA MÁS (PERO DESDE LUEGO DISTA
-      // MUCHO DE SER PERFECTO PARA LO QUE BUSCO. POR EJEMPLO
-      // ES CAPAZ DE DEJAR UNA PALABRA SUELTA EN UNA LÍNEA DESPUÉS
-      // DE HABER LLENADO LA ANTERIOR)
-      textFit($("h1"));
-      textFit($("h2"));
-      
-      // Tras aplicar el textFit a los H2, ver cual tiene
-      // el font-size menor, y aplicárselo a todos, para que todos
-      // tengan el mismo tamaño...
-      
-      var $h2textFitSpan = $("h2 > .textFitted");      
-      var min = Number.MAX_VALUE;
-      var currSize;
-      for (var i = 0; i < $h2textFitSpan.length; i++) {
-        currSize = parseFloat($h2textFitSpan.eq(i).css("font-size")); 
-        if (currSize < min) {
-          min = currSize;
-        }      
-      }
-      $h2textFitSpan.css({"font-size":min+"px"});
-      
-
- 
+      removeCurrentSlide();         
+      $(".seqToDisplay").append($slideToDisplay);      
+      Focalize.adjustContents($slideToDisplay);
     };
     
     var removeCurrentSlide = function() {
