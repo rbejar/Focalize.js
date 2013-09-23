@@ -317,12 +317,12 @@ var Focalize = (function () {
     layoutFunctions[1] = function(elementArray) {
       // elementWeights are relative to each other
       var elementWeights = {"H2": 1,
-                            "H3": 0.75,
-                            "H4": 0.6};  
+                            "H3": 0.6,
+                            "H4": 0.45};  
       // elementIndents are in percentage of the available width
       var elementIndents = {"H2": 0,
-                            "H3": 4,
-                            "H4": 7};
+                            "H3": 3,
+                            "H4": 6};
       
       var totalRelativeHeight = 0;
       var numElements = elementArray.length;
@@ -396,9 +396,22 @@ var Focalize = (function () {
               overflow: "hidden",
               "z-index": 201,
               background: "transparent",  
+              "padding-top": "4px", // Leave some room for margins and shadows in the image
+              "padding-bottom" : "4px" // Leave some room for margins and shadows in the image
           });        
+      
+      // Image centered, takes all availabe height while keeping
+      // aspect ratio. The display block + margins are necessary for the centering
       $contentElementDiv.append(content[0].$element
-                                  .addClass(Focalize.slideConfigData(slideIdx).cssClass));
+                                  .addClass(Focalize.slideConfigData(slideIdx).cssClass).
+                                  css({
+                                    display: "block",                                    
+                                    height: "100%", 
+                                    width: "auto",                                   
+                                    marginLeft: "auto",
+                                    marginRight: "auto"
+                                  }));
+      
       $allContentElements = $allContentElements.add($contentElementDiv);
     };
     

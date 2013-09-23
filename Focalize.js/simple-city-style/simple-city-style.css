@@ -192,6 +192,14 @@ h4.simple-city-seq1-slide1 {
   font-family: Impact, Charcoal, sans-serif;
 }
 
+img.simple-city-seq1-slide1 {
+	border-style:solid;
+  border-width:2px;
+  border-color: dark-gray;
+	/*box-shadow: 1px 1px 2px white;*/
+	border-radius: 3px;
+}
+
 /*
 ul.simple-city-seq1-slide1 {
 	list-style-type: square;
