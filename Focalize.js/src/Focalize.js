@@ -429,7 +429,7 @@ var Focalize = (function () {
    */
   Focalize.adjustContents = function($slideToDisplay) {
     // 200 as maxFontSize means: make it as big as it gets
-    // alignHoriz: true is not working for me in Firefox (it does in Chromium)
+    // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
     textFit($slideToDisplay.find("h1"), {alignVert: true, maxFontSize: 200});
     textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, maxFontSize: 200});
     
