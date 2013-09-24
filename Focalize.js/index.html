@@ -2,6 +2,9 @@
 <html>
 <head>
   <meta charset="UTF-8"></meta>
+  <!-- For mobile; it should prevent double tap zooming and allow multigestures. Maybe
+  this should be added once the presentation has started, and not for the "landing page" -->
+  <!--  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">-->
   <link rel="stylesheet" type="text/css" href="focalizejs-style.css">
   <link rel="stylesheet" type="text/css" href="simple-city-style/simple-city-style.css">
     
@@ -14,6 +17,7 @@
   <script src="lib/textFit.js"></script>
   <script src="lib/jquery.rm.js"></script>
   <script src="lib/jquery.spritely.js"></script>
+  <script src="lib/jquery.hammer.js"></script> <!-- v1.05; v1.06dev does not work -->
   <script src="src/jquery.physix2d.js"></script>
   <script src="src/Focalize.js"></script>
   <script src="simple-city-style/simple-city-style.js"></script>
@@ -49,7 +53,7 @@
         </section>          
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <!-- <h1></h1> no title for this one, the content must stand out -->
-            <h2>A single<br>big <br>idea</h2>            
+            <h2>A single<br>big idea</h2>            
         </section>
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Tux Dummy</h1>            

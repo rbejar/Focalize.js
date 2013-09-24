@@ -75,7 +75,16 @@ var Focalize = (function () {
   
   Focalize.load = function() {      
     $(document).ready(function(){
-      $("body").append("<button id='view-fullscreen' onclick='Focalize.start()'>Click me to start your full screen presentation!</button>");
+      $("body").append("<h1 class='remove-before-start' " +
+      		             "style='position: fixed; margin: 0 auto; top: 0; left:0; right: 0;'>This is a <a href='https://github.com/rbejar/Focalize.js' target='_blank'>Focalize.js</a> presentation</h1>");      
+      $("body").append("<button class='remove-before-start' " +
+      		              "style='position: fixed; margin:0 auto; top:15%; left:0; right:0; width:40%; height:25%;' " +
+      		              "onclick='Focalize.fullScreenStart()'>" +
+      		              "<h2>Start full screen presentation</h2></button>");
+      $("body").append("<button class='remove-before-start' " +
+          "style='position: fixed; margin:0 auto; bottom: 5%; left:0; right:0; width: 40%; height:25%;' " +
+          "onclick='Focalize.notFullScreenStart()'>" +
+          "<h2>Start presentation (not full screen)</h2></button>");
     });
   };
   
@@ -121,13 +130,13 @@ var Focalize = (function () {
     return null;
   };
   
-  Focalize.start = function () {   
+  Focalize.fullScreenStart = function () {   
     $(document).ready(function(){
       // Go to full screen
       $(document).fullScreen(true);
       $(document).bind("fullscreenchange", function() {
         if ($(document).fullScreen()) {       
-          $('#view-fullscreen').remove();         
+          $('.remove-before-start').remove();         
           
           // CREO QUE SIMPLEMENTE RETRASANDO LA LLAMADA A START HASTA
           // QUE EL BOTTON HA SIDO EFECTIVAMENTE ELIMINADO HARÁ QUE
@@ -137,7 +146,7 @@ var Focalize = (function () {
           
             // CON ESTA PAUSA DE 2 SEGUNDOS A PIÑÓN VA BIEN, PERO SERÍA MEJOR
           // QUE ESTO FUERA POR EVENTO...
-          setTimeout(Focalize.fullScreenStart, 2000);
+          setTimeout(Focalize.startPresentation, 2000);
         } else {
           // Si salimos de full screen, de momento no hago nada
             // Debería poner la presentación en un estado "continuable" o bien
@@ -145,6 +154,56 @@ var Focalize = (function () {
         }    
       });  
     });
+  };
+  
+  Focalize.notFullScreenStart = function () {   
+    $(document).ready(function(){
+      $('.remove-before-start').remove();         
+          
+          // CREO QUE SIMPLEMENTE RETRASANDO LA LLAMADA A START HASTA
+          // QUE EL BOTTON HA SIDO EFECTIVAMENTE ELIMINADO HARÁ QUE
+          // SE COJA EL TAMAÑO FULL SCREEN SIN MÁRGENES. PARECE
+          // QUE SI NO, EL NAVEGADOR ESTÁ TODAVÍA "RECOLOCÁNDOSE" Y
+          // PUEDEN SALIR MÁRGENES INDESEADOS...
+          
+            // CON ESTA PAUSA DE 2 SEGUNDOS A PIÑÓN VA BIEN, PERO SERÍA MEJOR
+          // QUE ESTO FUERA POR EVENTO...
+          setTimeout(Focalize.startPresentation, 2000); 
+    });
+  };
+  
+  /**
+   * Attach event handlers to the presentation. Only those related
+   * to user input (moving between slides etc.)
+   */
+  Focalize.attachEventHandlers = function() {
+    console.log("ATTACH EVENT HANDLERS");
+    $(document).keyup(Focalize.keyPresentationHandler);
+    // click event does not get right click in Chromium; mousedown gets left
+    // and right clicks properly in Firefox and Chromium
+    $(document).mousedown(Focalize.mousePresentationHandler);
+    // Swipes are not working yet...
+    /*$(document).hammer().on("swipeleft", function(ev) {
+      ev.gesture.preventDefault(); // Prevent standard scrolling behaviour
+      Focalize.nextSlide();
+      ev.stopPropagation();
+    });
+    $(document).hammer().on("swiperight", function(ev) {
+      ev.gesture.preventDefault(); // Prevent standard scrolling behaviour
+      Focalize.previouSlide();
+      ev.stopPropagation();
+    });*/  
+  };
+  
+  /**
+   * Detach event handlers from the presentation. Only those related
+   * to user input (moving between slides etc.)
+   */
+  Focalize.detachEventHandlers = function() {
+    $(document).unbind("keyup");
+    $(document).unbind("mousedown");
+    
+    // Detach hammer gestures...
   };
   
   /**
@@ -275,7 +334,7 @@ var Focalize = (function () {
             onlyh2h3h4 = false;
             break;
           default:
-            elementTypeArray[i] = "UNSUPPORTED"
+            elementTypeArray[i] = "UNSUPPORTED";
             onlyh2h3h4 = false;
             onlyimg = false;
             break;
@@ -317,8 +376,8 @@ var Focalize = (function () {
     layoutFunctions[1] = function(elementArray) {
       // elementWeights are relative to each other
       var elementWeights = {"H2": 1,
-                            "H3": 0.6,
-                            "H4": 0.45};  
+                            "H3": 0.75,
+                            "H4": 0.6};  
       // elementIndents are in percentage of the available width
       var elementIndents = {"H2": 0,
                             "H3": 3,
@@ -534,12 +593,18 @@ var Focalize = (function () {
   /**
    * Show slide with index newSlideIdx. The exact behaviour will depend
    * on if there is a change of sequence, and if it is a "next" or "previous"
-   * slide, or a different one
+   * slide, or a different one.
+   * callBackFunction will be called (if present) after the new slide
+   * has been appended to the page (not necessarily after everything is completely
+   * adjusted and rendered) 
    * @param newSlideIdx 
+   * @param callBackFunction 
    */
-  Focalize.displaySlide = function(newSlideIdx) {    
+  Focalize.displaySlide = function(newSlideIdx, callBackFunction) {    
     if (newSlideIdx < 0 || newSlideIdx > (Focalize.numSlides - 1)) {
       // The slide newSlideIdx does not exist. Do nothing.
+      if (callBackFunction)
+        callBackFunction();
       return;
     }
     
@@ -591,6 +656,8 @@ var Focalize = (function () {
       removeCurrentSlide();         
       $(".seqToDisplay").append($slideToDisplay);      
       Focalize.adjustContents($slideToDisplay);
+      if (callBackFunction)
+        callBackFunction();
     };
     
     var removeCurrentSlide = function() {
@@ -643,25 +710,89 @@ var Focalize = (function () {
     Focalize.currSeqIdx = newSeqIdx;
   };
   
-  Focalize.presentationHandler = function(event) {
-    var newSlideIdx = Focalize.currSlideIdx;    
-    //console.log(event.keyCode);
-    if (event.keyCode === 39) {
-      newSlideIdx = Focalize.currSlideIdx + 1;
-    } else if (event.keyCode === 37) {
-      newSlideIdx = Focalize.currSlideIdx - 1;
+  Focalize.keyPresentationHandler = function(event) {        
+    console.log(event.which);
+    // which is normalized among browsers, keyCode is not
+
+    // The idea behind the detachEventHandlers() is to prevent a 
+    // new event from being captured 
+    // before the action triggered by this one is over    
+    
+    switch (event.which) {
+      case 39: // right arrow
+      case 40: // down arrow
+      case 78: // n
+      case 34: // page down
+      case 13: // return
+      case 32: // space        
+        Focalize.detachEventHandlers();
+        Focalize.nextSlide();
+        event.preventDefault();
+        event.stopPropagation();
+        break;
+      case 37: // left arrow
+      case 38: // up arrow
+      case 80: // p
+      case 33 : // page up
+      case 8: // backspace
+        Focalize.detachEventHandlers();
+        Focalize.previousSlide();
+        event.preventDefault();
+        event.stopPropagation();
+        break;
+      default:
+        // Nothing. I have found it important not to interfere at all 
+        // with keyswe do not use.
     }
+    
+    /*var nextKeys = [Crafty.keys['N'], Crafty.keys['PAGE_DOWN'], 
+                    Crafty.keys['RIGHT_ARROW'], Crafty.keys['DOWN_ARROW'], Crafty.keys['ENTER'], Crafty.keys['SPACE']];
+                    
+                    var prevKeys = [Crafty.keys['P'], Crafty.keys['PAGE_UP'], 
+                    Crafty.keys['LEFT_ARROW'], Crafty.keys['UP_ARROW'], Crafty.keys['BACKSPACE']];*/
         
-    Focalize.displaySlide(newSlideIdx);
+  };
+  
+  Focalize.mousePresentationHandler = function(event) {        
+    // jQuery which is normalized among browsers
     
-    // TODO: Prevenir que se pueda pulsar una tecla antes de cargar
-    // completamente el nuevo slide, o hace cosas raras (p.ej.
-    // scroll del fondo dos veces, textos desaparecidos...)
+    // The idea behind the detachEventHandlers() is to prevent a 
+    // new event from being captured 
+    // before the action triggered by this one is over    
     
+    switch (event.which) {
+      case 1: // left button
+        Focalize.detachEventHandlers();
+        Focalize.nextSlide();
+        event.preventDefault();
+        event.stopPropagation();
+        break;
+      case 3: // right button
+        Focalize.detachEventHandlers();
+        Focalize.previousSlide();
+        event.preventDefault();
+        event.stopPropagation();
+        break;
+      default:
+        // Nothing. I have found it important not to interfere at all 
+        // with clicks we do not use.
+    }   
+  };
+  
+  Focalize.nextSlide = function() {
+    var newSlideIdx = Focalize.currSlideIdx;      
+    newSlideIdx = Focalize.currSlideIdx + 1;
+    Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
+  };
+  
+  Focalize.previousSlide = function() {
+    var newSlideIdx = Focalize.currSlideIdx;      
+    newSlideIdx = Focalize.currSlideIdx - 1;
+    Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers); 
   };
   
   
-  Focalize.fullScreenStart = function () {     
+  Focalize.startPresentation = function () {     
     var $allSeqs = $(".focalize-sequence");
     
     Focalize.$slides = [];
@@ -715,11 +846,17 @@ var Focalize = (function () {
       }     
     }
     
+    // Disable right click menu just before starting 
+    $(document).bind("contextmenu", function(event) {
+      return false;
+    });
+    
+    Focalize.attachEventHandlers();
     
     // Display first slide to start the "presentation loop"
     Focalize.displaySlide(0);
     
-    $(document).keyup(Focalize.presentationHandler);
+    
     
     
     // QUICK PHYSICX2D TEST... 
@@ -730,6 +867,8 @@ var Focalize = (function () {
     
  
   };
+  
+
   
 
   return Focalize;

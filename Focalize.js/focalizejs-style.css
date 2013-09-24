@@ -1,7 +1,51 @@
 body {
-  background: black;
-  margin:0 auto;
+  background: #111111;
+  margin:0 auto;  
 }
+
+h1 {
+	color: #EEEEEE;
+  text-align: center; /  
+  line-height: 1;
+  font-weight: bold;
+  font-family: Tahoma, Geneva, sans-serif;
+  font-size: xx-large;
+}
+
+h2 {
+  color: #EEEEEE;
+  text-align: center; /  
+  line-height: 1;
+  font-weight: bold;
+  font-family: Tahoma, Geneva, sans-serif;
+  font-size: x-large;
+}
+
+button h2 {
+	color: #111111;
+}
+
+a:link {
+	color:#EEEEEE;
+	text-decoration:underline;
+}
+
+a:visited {
+  color:#EEEEEE;
+  text-decoration:none;
+}
+
+a:hover {
+  color:#EEEEEE;
+  text-decoration:underline;
+}
+
+a:active {
+  color:#EEEEEE;
+  text-decoration:none;
+}
+
+
 
 .focalize-presentation {
   display:none; /*start hidden and taking no space*/ 

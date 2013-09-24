@@ -53,7 +53,7 @@ div.background-skyscrapers {
   background: transparent url(background_skyscrapers_2225x705_100dpi.png) repeat-x;
   /* background-size must be established in the code, as it depends on the number
      of slides (is the only way I have found to prevent problems when the user
-     has her browser with a "weird" zoom level) */ 
+     has her browser with a "weird" zoom level) */
 }
 
 div.background-houses {
@@ -101,7 +101,8 @@ div.foreground-billboard-textarea {
   left: 3.7%;      
   width: 92.6%;      
   height: 55.8%;
-  overflow: hidden;
+  overflow: visible; /* This allows for shadows etc. to show. As long as the div container 
+  is big enough, it should not create problems */
   z-index: 201;  
   background: transparent;  
 }
@@ -149,15 +150,17 @@ h1.simple-city-seq1-slide1 {
   
   /* It seems that jSlabify does not take into consideration shadows to measure
   font sizes so characters like p do not have full shadows... */ 
-  /*text-shadow: 1px 1px 2px #333333;*/      
+  text-shadow: 0px 2px 1px #BBBBBB;      
 }
 
 h2.simple-city-seq1-slide1 { 
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%; 
+  bottom: 0;
+  right: 0;
+  /*width: 100%;
+  height: 100%;*/ 
   margin:0 auto;   
   color: #111111;
   
@@ -167,11 +170,13 @@ h2.simple-city-seq1-slide1 {
 
 h3.simple-city-seq1-slide1 {      
   position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 100%;
-  height: 100%;  
-  margin:0 auto;   
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /*width: 100%;
+  height: 100%;*/  
+  margin:0 auto; 
   color: #111111;  
   
   font-weight: normal;
@@ -180,11 +185,13 @@ h3.simple-city-seq1-slide1 {
 
 h4.simple-city-seq1-slide1 {      
   position: absolute;
-  top: 0px;
-  left: 0px;
-  width: 100%;
-  height: 100%;
-  margin:0 auto;   
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /*width: 100%;
+  height: 100%;*/
+  margin:0 auto;  
   color: #111111;
   
   font-weight: normal;
