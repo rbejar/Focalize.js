@@ -176,11 +176,10 @@ var Focalize = (function () {
    * Attach event handlers to the presentation. Only those related
    * to user input (moving between slides etc.)
    */
-  Focalize.attachEventHandlers = function() {
-    console.log("ATTACH EVENT HANDLERS");
+  Focalize.attachEventHandlers = function() {    
     $(document).keyup(Focalize.keyPresentationHandler);
     // click event does not get right click in Chromium; mousedown gets left
-    // and right clicks properly in Firefox and Chromium
+    // and right clicks properly in both Firefox and Chromium
     $(document).mousedown(Focalize.mousePresentationHandler);
     // Swipes are not working yet...
     /*$(document).hammer().on("swipeleft", function(ev) {
@@ -279,10 +278,10 @@ var Focalize = (function () {
    * in a div.
    * 
    * @param slideIdx Index of the slide which content we are laying out
-   * @param content An array of objects (order is significant). Example:
-   * [{type: "h2", 
+   * @param content An array of objects (order is important). Example:
+   * [{type: "H2", // must be uppercase 
    *    $element: a jQueryObject},
-   *  {type: "h3",
+   *  {type: "H3",
    *    $element: a jQueryObject}...];
    * @param $contentDiv a jQueryObject with a div where the content will be appended
    * @returns $contentDiv with content properly laid out and appended
@@ -304,61 +303,71 @@ var Focalize = (function () {
       // 1: every element is h2, h3 or h4, more than one element
       // 2: a single element, of type h2, h3 or h4
       // 3: a single img
-      // 4: every element is an img
+      // 4: a single img along with a single figcaption (I assume they are enclosed
+      //    in a figure element, but I do not take that into account)
       // ...      
-      
+      console.log("CHOOSE LAYOUT TYPE");
       if (numElements <= 0) {
         return 0;
       }
-      
-      var onlyh2h3h4 = true;
-      var onlyimg = true;
+
+      var numOfEachElement = {
+          H2:0,
+          H3:0,
+          H4:0,
+          IMG:0,
+          FIGURE:0,
+          FIGCAPTION:0,
+          UNSUPPORTED:0
+      };
       var elementTypeArray = [];
-      
+     
+      var currentTag = "";
       for (var i = 0; i < numElements; i++) {
-        switch (content[i].type.toUpperCase()) {
-          case "H2":            
-            elementTypeArray[i] = "H2";
-            onlyimg = false;
-            break;
+        currentTag = content[i].type.toUpperCase();  // toUpperCase, just in case ;-)
+        console.log("**"+currentTag);
+        switch (currentTag) {
+          case "H2":          
           case "H3":
-            elementTypeArray[i] = "H3";
-            onlyimg = false;
-            break;
           case "H4":
-            elementTypeArray[i] = "H4";
-            onlyimg = false;
-            break;
-          case "IMG":
-            elementTypeArray[i] = "IMG";
-            onlyh2h3h4 = false;
-            break;
+          case "IMG":  
+          case "FIGCAPTION":
+            elementTypeArray[i] = currentTag;            
+            numOfEachElement[currentTag] += 1;
+            break;          
           default:
             elementTypeArray[i] = "UNSUPPORTED";
-            onlyh2h3h4 = false;
-            onlyimg = false;
+            numOfEachElement["UNSUPPORTED"] += 1;
             break;
         }         
       }
       
-      if (onlyh2h3h4) {
-        if (numElements > 1) {
-          return {layoutType:1, elementArray: elementTypeArray};
-        } else {
-          return {layoutType:2, elementArray: elementTypeArray};
-        }
-      } else if (onlyimg) {
+      var numH2H3H4 = numOfEachElement["H2"] +
+                      numOfEachElement["H3"] +
+                      numOfEachElement["H4"];
+      
+      if (numOfEachElement["UNSUPPORTED"] > 0) {
+        return {layoutType:0, elementArray: elementTypeArray};
+      } else if (numH2H3H4 === 1 && numOfEachElement["IMG"] === 0) {
+        return {layoutType:2, elementArray: elementTypeArray};
+      } else if (numH2H3H4 > 1 && numOfEachElement["IMG"] === 0) {
+        return {layoutType:1, elementArray: elementTypeArray};
+      } else if (numH2H3H4 === 0 && numOfEachElement["IMG"] === 1 &&
+                 numOfEachElement["FIGCAPTION"] === 0) {
         return {layoutType:3, elementArray: elementTypeArray};
+      } else if (numOfEachElement["FIGCAPTION"]===1 && numOfEachElement["IMG"] === 1) {
+        return {layoutType:4, elementArray: elementTypeArray};
       } else {
         return {layoutType:0, elementArray: elementTypeArray};
-      }      
+      }     
     };    
     
     var layoutFunctions = [];
     
     // Layout function 0: No layout available. Show an error instead of the content
     layoutFunctions[0] = function(elementArray) {
-      $allContentElements = $("<div><h2>NO LAYOUT AVAILABLE FOR THIS SLIDE. CHECK ITS CONTENTS.</h2><div>")
+      $contentElementDiv = $("<div></div>");
+      $contentElementDiv.append($("<h2>NO LAYOUT AVAILABLE FOR THIS SLIDE. CHECK ITS CONTENTS.</h2>")          
         .css({
           position: "absolute",
           top: 0,   
@@ -368,8 +377,9 @@ var Focalize = (function () {
           overflow: "hidden",
           color: "red",
           "z-index": 200000,
-          background: "transparent",  
-        });
+          background: "transparent"  
+        }));
+      $allContentElements = $allContentElements.add($contentElementDiv);
     };
     
     // Layout function 1: all elements are h2, h3, h4 (show like an unordered list)
@@ -444,34 +454,66 @@ var Focalize = (function () {
     
     // Layout function 3: a single element img
     layoutFunctions[3] = function(elementArray) {
-      $contentElementDiv = $("<div></div>")
-        .css({
-              position: "absolute",
-              top: 0,   
-              left: 0,     
-              right: 0,                   
-              bottom: 0,
-              margin: "auto",
-              overflow: "hidden",
-              "z-index": 201,
-              background: "transparent",  
-              "padding-top": "4px", // Leave some room for margins and shadows in the image
-              "padding-bottom" : "4px" // Leave some room for margins and shadows in the image
-          });        
+      $contentElementDiv = $("<div></div>").addClass("simple-city-layout-single-img");                
       
       // Image centered, takes all availabe height while keeping
-      // aspect ratio. The display block + margins are necessary for the centering
+      // aspect ratio. This seems a sensible choice as long as the 
+      // presentation is in landscape, as should be on any desktop
+      // screen. For smarthpones or tablets, if they are held
+      // in portrait, this could lead to images which are not 
+      // entirely shown (fill 100% vertical space, and keep aspect
+      // ratio, may mean that the whole picture is not shown). Landscape 
+      // should be used in mobile devices anyway.
+      // The display block + margins are necessary for the centering
       $contentElementDiv.append(content[0].$element
-                                  .addClass(Focalize.slideConfigData(slideIdx).cssClass).
-                                  css({
-                                    display: "block",                                    
-                                    height: "100%", 
-                                    width: "auto",                                   
-                                    marginLeft: "auto",
-                                    marginRight: "auto"
-                                  }));
+                                  .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                                            " simple-city-layout-single-img"));
       
       $allContentElements = $allContentElements.add($contentElementDiv);
+    };
+    
+    // Layout function 4: a single element img with a figcaption
+    layoutFunctions[4] = function(elementArray) {      
+      var theFigCaption;
+      var theImg;
+      var aspectRatio;
+      
+      if (content[0].type === "IMG") {
+        theImg = content[0];
+        theFigCaption = content[1];
+      } else {
+        theImg = content[1];
+        theFigCaption = content[0];
+      }
+            
+            
+      aspectRatio = theImg.$element.height() > 0 ? theImg.$element.width() / theImg.$element.height()
+                                                 : 1;
+      
+      if (aspectRatio >= 1) { // img is wide, caption at the bottom        
+        // Image
+        $contentElementDiv = $("<div></div>").addClass("simple-city-layout-img-figcaption")
+          .css({top:0,left:0,right:0, bottom:"15%"});                 
+        // I use the same CSS style for the img than in the layout with single img
+        $contentElementDiv.append(theImg.$element
+          .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                      " simple-city-layout-single-img"));               
+        $allContentElements = $allContentElements.add($contentElementDiv);
+        
+        // FigCaption
+        $contentElementDiv = $("<div></div>").addClass("simple-city-layout-img-figcaption")
+          .css({top:"86%",left:0,right:0,bottom:0});                 
+
+        $contentElementDiv.append(theFigCaption.$element
+          .addClass(Focalize.slideConfigData(slideIdx).cssClass).css({"text-align":"center"}));               
+        $allContentElements = $allContentElements.add($contentElementDiv);
+        
+        
+      } else { // img is tall, caption at the right 
+        
+      }
+      
+      
     };
     
     var chosenLayout = chooseLayoutType();
@@ -489,8 +531,9 @@ var Focalize = (function () {
   Focalize.adjustContents = function($slideToDisplay) {
     // 200 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
-    textFit($slideToDisplay.find("h1"), {alignVert: true, maxFontSize: 200});
-    textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, maxFontSize: 200});
+    textFit($slideToDisplay.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 200});
+    textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 200});
+    textFit($slideToDisplay.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 200});
     
     // Tras aplicar el textFit a los elementos, ver cual tiene
     // el font-size menor en cada categoría, y aplicárselo a todos, para que todos
@@ -511,6 +554,11 @@ var Focalize = (function () {
       // 0.15 is a magic number. Should be a style decision
       if (min > Math.floor(currentMin - 0.15 * currentMin)) {
         min = Math.floor(currentMin - 0.15 * currentMin);
+      }
+      // We never allow the minimum font size below 5
+      // (magic number, seems minimum enough)
+      if (min < 5) {
+        min = 5;
       }
       $textFitSpan.css({"font-size":min+"px"});  
       return min;
@@ -571,16 +619,38 @@ var Focalize = (function () {
     var $currElem;
     var content = [];
     
-    var $validContentElements = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4,img");
+    // I am not interested in figure elements, I will assume they
+    // are there; I want imgs and figcaptions
+    var $validContentElements = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4,img,figcaption");
     
-        
+    var j = 0; // I can't use i for the content array
+    var $children;
+    //console.log("validcontentelements length " + $validContentElements.length);
     for (var i = 0; i < $validContentElements.length; i++) {
-      $currElem = $validContentElements.eq(i);
-      content[i] = {};
-      content[i].type = $currElem.get(0).tagName;
-      content[i].$element = $currElem;      
+      $currElem = $validContentElements.eq(i);  
+      //console.log($currElem.get(0).tagName.toUpperCase());
+      //if ($currElem.get(0).tagName.toUpperCase() === "FIGURE") {
+        
+        
+        /*
+        // We want the children img and figcaption, not figure itself
+        $children = $currElem.children("img,figcaption");
+        //console.log("length " + $currElem.children("img,figcaption").length);
+        for (var k = 0; k < $children.length; k++) {
+          $currElem = $children.eq(k);
+          content[j] = {};
+          content[j].type =  $currElem.get(0).tagName.toUpperCase(); // toUpperCase, just in case... ;-)
+          //console.log($currElem.get(0).tagName.toUpperCase());
+          content[j].$element = $currElem;
+          j += 1;          
+        }*/
+      //} else {      
+        content[j] = {};
+        content[j].type = $currElem.get(0).tagName.toUpperCase(); // toUpperCase, just in case... ;-)
+        content[j].$element = $currElem;
+        j += 1;
+      //}
     }
-    
     $contentTextAreaDiv = Focalize.layoutContent(slideIdx, content, $contentTextAreaDiv);    
     
     // Could I use a layout plugin? My first tests with jLayout have
@@ -711,7 +781,7 @@ var Focalize = (function () {
   };
   
   Focalize.keyPresentationHandler = function(event) {        
-    console.log(event.which);
+    // console.log(event.which);
     // which is normalized among browsers, keyCode is not
 
     // The idea behind the detachEventHandlers() is to prevent a 
@@ -742,15 +812,8 @@ var Focalize = (function () {
         break;
       default:
         // Nothing. I have found it important not to interfere at all 
-        // with keyswe do not use.
+        // with keys I do not use.
     }
-    
-    /*var nextKeys = [Crafty.keys['N'], Crafty.keys['PAGE_DOWN'], 
-                    Crafty.keys['RIGHT_ARROW'], Crafty.keys['DOWN_ARROW'], Crafty.keys['ENTER'], Crafty.keys['SPACE']];
-                    
-                    var prevKeys = [Crafty.keys['P'], Crafty.keys['PAGE_UP'], 
-                    Crafty.keys['LEFT_ARROW'], Crafty.keys['UP_ARROW'], Crafty.keys['BACKSPACE']];*/
-        
   };
   
   Focalize.mousePresentationHandler = function(event) {        
@@ -775,7 +838,7 @@ var Focalize = (function () {
         break;
       default:
         // Nothing. I have found it important not to interfere at all 
-        // with clicks we do not use.
+        // with clicks I do not use.
     }   
   };
   

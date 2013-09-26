@@ -198,6 +198,21 @@ h4.simple-city-seq1-slide1 {
   font-family: Impact, Charcoal, sans-serif;
 }
 
+figcaption.simple-city-seq1-slide1 {      
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /*width: 100%;
+  height: 100%;*/
+  margin:0 auto;  
+  color: #111111;
+  
+  font-weight: normal;
+  font-family: Impact, Charcoal, sans-serif;
+}
+
 img.simple-city-seq1-slide1 {
 	border-style:solid;
   border-width:2px;
@@ -205,6 +220,44 @@ img.simple-city-seq1-slide1 {
 	/*box-shadow: 1px 1px 2px white;*/
 	border-radius: 3px;
 }
+
+
+/* Classes for the layouts */
+
+div.simple-city-layout-single-img {
+	position: absolute;
+  top: 0;
+  left: 0;     
+  right: 0;                   
+  bottom: 0;
+  margin: auto;
+  overflow: hidden;
+  z-index: 201;
+  background: transparent;  
+  padding-top: 4px; /* Leave some room for margins and shadows in the image */
+  padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+img.simple-city-layout-single-img {
+  display: block;
+  height: 100%; 
+  width: auto;
+  margin-left: auto;
+  margin-right: auto; 
+}
+
+div.simple-city-layout-img-figcaption {
+  position: absolute;                     
+  margin: auto;
+  overflow: hidden;
+  z-index: 201;
+  background: transparent;  
+  padding-top: 4px; /* Leave some room for margins and shadows in the image */
+  padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+
+
 
 /*
 ul.simple-city-seq1-slide1 {
