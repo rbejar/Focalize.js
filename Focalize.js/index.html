@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8"></meta>
+  <meta charset="UTF-8">
   <!-- For mobile; it should prevent double tap zooming and allow multigestures. Maybe
   this should be added once the presentation has started, and not for the "landing page" -->
   <!--  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">-->
@@ -48,23 +48,31 @@
             <h1>Slide 2 - Title</h1>
             <h2>Some important point that I make.</h2>
             <h3>With some relevant stuff making it clearer</h3>
-            <h2>Other important point under the same title</h2>
+            <h2>Other <em>important</em> point under the same title</h2>
             <h2>Final thing I need to write in this slide</h2>                                        
         </section>          
-        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1_NoTitle">
             <!-- <h1></h1> no title for this one, the content must stand out -->
-            <h2>A single<br>big idea</h2>            
+            <h2>A single<br><strong>big</strong> idea</h2>            
         </section>
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
             <h1>Tux Dummy</h1>            
             <img src="assets/testdummy_800x800.png" alt="Tux Dummy" height="800" width="800">            
         </section>              
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
-            <h1>Slide 5 - Figure</h1>
+            <h1>Slide 5 - Figure (caption bottom)</h1>
             <figure>
               <img src="assets/testdummy_800x800.png" alt="Tux Dummy" height="800" width="800">
               <figcaption>Tux dummy :-) I will try a very long caption to test the best options 
               for its layout. I really can't think of more unnecessary words</figcaption>
+            </figure>
+        </section>
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>Slide 5b - Figure (caption top)</h1>
+            <figure>
+              <figcaption>Tux dummy :-) I will try a very long caption to test the best options 
+              for its layout. I really can't think of more unnecessary words</figcaption>
+              <img src="assets/testdummy_800x800.png" alt="Tux Dummy" height="800" width="800">              
             </figure>
         </section>    
         <section class="focalize-slide" data-slide-name="SimpleCitySlide1">

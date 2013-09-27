@@ -68,7 +68,7 @@ div.background-houses {
   /* background-size must be established in the code, as it depends on the number
      of slides (is the only way I have found to prevent problems when the user
      has her browser with a "weird" zoom level) */
-} 
+}
 
 
 /* Slide commons for slides in sequence1 */
@@ -107,7 +107,7 @@ div.foreground-billboard-textarea {
   background: transparent;  
 }
 
-/* SLIDE STYLE 1: simple-city-seq1-slide1 */
+/* SLIDE STYLE 1: simple-city-seq1-slide1 (with and without title) */
 
 div.foreground-trafficsign {
   position: fixed;
@@ -121,8 +121,20 @@ div.foreground-trafficsign {
   background-size: 100% 100%; /* We take the full div with the image, no matter what */
 }
 
+div.foreground-trafficsign-no-title {
+  position: fixed;
+  top: 3%;   
+  left: 11%;      
+  width: 78%;      
+  bottom: 2%;
+  overflow: hidden;  
+  z-index: 200;  
+  background: transparent url(big_sign_1420x881_100dpi.png) no-repeat;  
+  background-size: 100% 100%; /* We take the full div with the image, no matter what */
+}
+
 div.foreground-trafficsign-textarea {
-  position: absolute; /* this will be relative to the foreground-trafficsign */
+  position: absolute; /* this will be relative to the foreground-trafficsign[-no-title] */
   top: 10%;   
   left: 6%;      
   right: 6%;      
@@ -131,6 +143,7 @@ div.foreground-trafficsign-textarea {
   z-index: 201;  
   background: transparent;  
 } 
+
 
 h1.simple-city-seq1-slide1 {
 	position: absolute;
@@ -165,7 +178,7 @@ h2.simple-city-seq1-slide1 {
   color: #111111;
   
   font-weight: normal;
-  font-family: Impact, Charcoal, sans-serif;
+  font-family: Tahoma, Geneva, sans-serif;
 }
 
 h3.simple-city-seq1-slide1 {      
@@ -180,7 +193,7 @@ h3.simple-city-seq1-slide1 {
   color: #111111;  
   
   font-weight: normal;
-  font-family: Impact, Charcoal, sans-serif;
+  font-family: Tahoma, Geneva, sans-serif;
 }
 
 h4.simple-city-seq1-slide1 {      
@@ -195,7 +208,7 @@ h4.simple-city-seq1-slide1 {
   color: #111111;
   
   font-weight: normal;
-  font-family: Impact, Charcoal, sans-serif;
+  font-family: Tahoma, Geneva, sans-serif;
 }
 
 figcaption.simple-city-seq1-slide1 {      
@@ -210,13 +223,13 @@ figcaption.simple-city-seq1-slide1 {
   color: #111111;
   
   font-weight: normal;
-  font-family: Impact, Charcoal, sans-serif;
+  font-family: Tahoma, Geneva, sans-serif;
 }
 
 img.simple-city-seq1-slide1 {
 	border-style:solid;
   border-width:2px;
-  border-color: dark-gray;
+  border-color: darkgray;
 	/*box-shadow: 1px 1px 2px white;*/
 	border-radius: 3px;
 }
@@ -236,6 +249,18 @@ div.simple-city-layout-single-img {
   background: transparent;  
   padding-top: 4px; /* Leave some room for margins and shadows in the image */
   padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+div.simple-city-layout-single-h {
+  position: absolute;
+  top: 0;
+  left: 0;     
+  right: 0;                   
+  bottom: 0;
+  margin: auto;
+  overflow: hidden;
+  z-index: 201;
+  background: transparent;
 }
 
 img.simple-city-layout-single-img {
@@ -258,42 +283,6 @@ div.simple-city-layout-img-figcaption {
 
 
 
-
-/*
-ul.simple-city-seq1-slide1 {
-	list-style-type: square;
-	
-	
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  margin:0 auto;
-     
- color: #EEEEEE;
-  line-height: 1;
-  font-weight: normal;
-  font-family: Impact, Charcoal, sans-serif;
-  
-  
-  	
-}
-
-li.simple-city-seq1-slide1 {
-	position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-
-  line-height: 1;
-  font-weight: normal;
-  font-family: Impact, Charcoal, sans-serif;
-  
-}
-*/
 /* ************************** */
 /* End of SimpleCitySequence1 */
 /* ************************** */

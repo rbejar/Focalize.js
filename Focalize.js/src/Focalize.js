@@ -16,21 +16,21 @@
     along with this program. If not, see {http://www.gnu.org/licenses/}.
  */
 
-var Focalize = (function () {
+function FocalizeModule() {
   var Focalize = {};
   
   //var privateVariable = 1;
 
-  function privateMethod() {
+  //function privateMethod() {
     // ...
-  }
+  //}
 
-  Focalize.currSlideIdx = 0,
-  Focalize.currSeqIdx = 0,
-  Focalize.$slides = [],
-  Focalize.numSlides = 0,
-  Focalize.seqChanges = [],
-  Focalize.numSeqs = 0,
+  Focalize.currSlideIdx = 0;
+  Focalize.currSeqIdx = 0;
+  Focalize.$slides = [];
+  Focalize.numSlides = 0;
+  Focalize.seqChanges = [];
+  Focalize.numSeqs = 0;
   Focalize.$seqs = [];
   Focalize.seqNames = [];
   Focalize.seqNumSlides = []; 
@@ -93,8 +93,9 @@ var Focalize = (function () {
    * (slide indexes start at 0)
    * @param slideIdx
    */
-  Focalize.seqOfSlide = function(slideIdx) {        
-    for (var i = 1; i < Focalize.seqChanges.length; i++) {
+  Focalize.seqOfSlide = function(slideIdx) {
+    var i;
+    for (i = 1; i < Focalize.seqChanges.length; i++) {
       if (slideIdx < Focalize.seqChanges[i]) {
         return i-1;
       }  
@@ -107,7 +108,8 @@ var Focalize = (function () {
    * @param seqIdx
    */
   Focalize.seqConfigData = function(seqIdx) {
-    for (var i = 0; i < Focalize.styleConfiguration.sequences.length; i++) {
+    var i;
+    for (i = 0; i < Focalize.styleConfiguration.sequences.length; i++) {
       if (Focalize.styleConfiguration.sequences[i].name === Focalize.seqNames[seqIdx]) {
         return Focalize.styleConfiguration.sequences[i];
       }
@@ -121,7 +123,8 @@ var Focalize = (function () {
    * @param slideIdx
    */
   Focalize.slideConfigData = function(slideIdx) {
-    for (var i = 0; i < Focalize.styleConfiguration.slides.length; i++) {      
+    var i;
+    for (i = 0; i < Focalize.styleConfiguration.slides.length; i++) {      
       if (Focalize.styleConfiguration.slides[i].name === Focalize.slideNames[slideIdx]) {
         return Focalize.styleConfiguration.slides[i];
       }
@@ -210,6 +213,7 @@ var Focalize = (function () {
    * @param seqIdx Which sequence? 
    */
   Focalize.$createSeqDiv = function(seqIdx) {
+    var i;
     var seqConfigData = Focalize.seqConfigData(seqIdx);    
     
     //var seqWidthPx = Focalize.seqNumSlides[currSeqIdx] * $("html").width();
@@ -233,7 +237,7 @@ var Focalize = (function () {
      * This solution is not perfect, and seems to work slightly better in Firefox than in
      * Chromium, but it is far better than nothing, and seems to work reasonably fine
      * unless the zoom levels are very big or very small.*/
-    for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
+    for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
       $backLayerDiv =  $("<div></div>").addClass(seqConfigData.backgroundLayers[i].cssClass
                                                      +" backToScroll"+i)
       .css({width: seqWidthPercent+"%",
@@ -242,7 +246,7 @@ var Focalize = (function () {
     }
         
    
-    for (var i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {
+    for (i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {
       $backLayerDiv =  $("<div></div>").addClass(seqConfigData.animatedBackgroundLayers[i].cssClass
                                                      +" backToScroll"+i+" backToPan"+i)
         .css({width: seqWidthPercent+"%",
@@ -262,14 +266,25 @@ var Focalize = (function () {
     return $slideDiv;
   };
   
-  Focalize.$createTitleDiv = function($slideChildren, slideIdx) {
-    var $titleDiv = $("<div></div>")
+  /**
+   * Creates and returns a div for the title of the slide. It may
+   * be an empty div if the slide has no title (i.e. if its
+   * titleLayerCSSClass is an empty string).
+   */
+  Focalize.$createTitleDiv = function($titleContents, slideIdx) {
+    var $titleDiv;
+    var $titleTextAreaDiv;
+    if (Focalize.slideConfigData(slideIdx).titleLayerCSSClass !== "") {
+      $titleDiv = $("<div></div>")
                     .addClass(Focalize.slideConfigData(slideIdx).titleLayerCSSClass);       
-    var $titleTextAreaDiv = $("<div></div>")
-                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);
+      $titleTextAreaDiv = $("<div></div>")
+                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);    
+      $titleTextAreaDiv.append($titleContents);
+      $titleDiv.append($titleTextAreaDiv);     
+    } else { // No title
+      $titleDiv = $("<div></div>"); 
+    } 
     
-    $titleTextAreaDiv.append($slideChildren);
-    $titleDiv.append($titleTextAreaDiv);
     return $titleDiv;  
   };
 
@@ -287,7 +302,7 @@ var Focalize = (function () {
    * @returns $contentDiv with content properly laid out and appended
    */
   Focalize.layoutContent = function(slideIdx, content, $contentDiv) {
-    var $contentElementDiv;
+    var $contentElementDivs = [];
     var $allContentElements = $();
     
     var numElements = content.length;
@@ -306,26 +321,22 @@ var Focalize = (function () {
       // 4: a single img along with a single figcaption (I assume they are enclosed
       //    in a figure element, but I do not take that into account)
       // ...      
-      console.log("CHOOSE LAYOUT TYPE");
+      
+      var i;
+      
       if (numElements <= 0) {
         return 0;
       }
 
       var numOfEachElement = {
-          H2:0,
-          H3:0,
-          H4:0,
-          IMG:0,
-          FIGURE:0,
-          FIGCAPTION:0,
-          UNSUPPORTED:0
+          H2:0,H3:0,H4:0,IMG:0,FIGURE:0,
+          FIGCAPTION:0, UNSUPPORTED:0
       };
       var elementTypeArray = [];
      
       var currentTag = "";
-      for (var i = 0; i < numElements; i++) {
-        currentTag = content[i].type.toUpperCase();  // toUpperCase, just in case ;-)
-        console.log("**"+currentTag);
+      for (i = 0; i < numElements; i++) {
+        currentTag = content[i].type.toUpperCase();  // toUpperCase, just in case ;-)        
         switch (currentTag) {
           case "H2":          
           case "H3":
@@ -362,12 +373,26 @@ var Focalize = (function () {
       }     
     };    
     
+    /**
+     * Each layoutFunction takes an elementArray (an array of HTML tag names
+     * as strings in upperCase) and a content (the same content array received
+     * by Focalize.layoutContent) and returns an array of divs with those elements
+     * laid out somehow (ever function is specialized in a layout for
+     * certain elements; if the wrong elements are include in the elementArray,
+     * the result is unpredictable, and possibly very wrong.
+     * As a guideline, the returned divs should be absolute positioned, with sizes
+     * in percentages if needed, and with a z-index right for the style (e.g.
+     * the same z-index as the foreground area for the contents.) 
+     * These divs will be added (in order) to the content div for the slide.
+     */
     var layoutFunctions = [];
     
     // Layout function 0: No layout available. Show an error instead of the content
-    layoutFunctions[0] = function(elementArray) {
-      $contentElementDiv = $("<div></div>");
-      $contentElementDiv.append($("<h2>NO LAYOUT AVAILABLE FOR THIS SLIDE. CHECK ITS CONTENTS.</h2>")          
+    layoutFunctions[0] = function(elementArray, content) {
+      var $contentElementDivs = [];
+      
+      $contentElementDivs[0] = $("<div></div>");
+      $contentElementDivs[0].append($("<h2>NO LAYOUT AVAILABLE FOR THIS SLIDE. CHECK ITS CONTENTS.</h2>")          
         .css({
           position: "absolute",
           top: 0,   
@@ -379,15 +404,19 @@ var Focalize = (function () {
           "z-index": 200000,
           background: "transparent"  
         }));
-      $allContentElements = $allContentElements.add($contentElementDiv);
+
+      return $contentElementDivs;
     };
     
     // Layout function 1: all elements are h2, h3, h4 (show like an unordered list)
-    layoutFunctions[1] = function(elementArray) {
+    layoutFunctions[1] = function(elementArray, content) {
+      var i;
+      var $contentElementDivs = [];
+      
       // elementWeights are relative to each other
       var elementWeights = {"H2": 1,
-                            "H3": 0.75,
-                            "H4": 0.6};  
+                            "H3": 0.8,
+                            "H4": 0.65};  
       // elementIndents are in percentage of the available width
       var elementIndents = {"H2": 0,
                             "H3": 3,
@@ -399,20 +428,20 @@ var Focalize = (function () {
         return;
       }      
       
-      for (var i = 0; i < numElements; i++) {
+      for (i = 0; i < numElements; i++) {
         totalRelativeHeight += elementWeights[elementArray[i]];
       }  
       
       var numberOfGaps = numElements - 1;
-      var gapSize = 2; /*Percentage*/
+      var gapSize = 1; /*Percentage*/
       var totalPercentHeight = 100 - (gapSize * numberOfGaps);
       
       var currentElementHeight;
       var currentElementTop = 0;
-      for (var i = 0; i < numElements; i++) {     
+      for (i = 0; i < numElements; i++) {     
         currentElementHeight = (elementWeights[elementArray[i]] / totalRelativeHeight) 
                                * totalPercentHeight;        
-        $contentElementDiv = $("<div></div>")
+        $contentElementDivs[i] = $("<div></div>")
           .css({
             position: "absolute",
             top: currentElementTop+"%",   
@@ -423,38 +452,29 @@ var Focalize = (function () {
             "z-index": 201,
             background: "transparent",  
           });        
-        $contentElementDiv.append(content[i].$element
+        $contentElementDivs[i].append(content[i].$element
                                 .addClass(Focalize.slideConfigData(slideIdx).cssClass)
                                 .css({"text-align":"left"}));
-        $allContentElements = $allContentElements.add($contentElementDiv);
-        
         currentElementTop = currentElementTop + currentElementHeight + gapSize;
-      }        
+      }   
+      return $contentElementDivs;     
     };
     
     // Layout function 2: a single element H2, H3 or H4
-    layoutFunctions[2] = function(elementArray) {
-      $contentElementDiv = $("<div></div>")
-        .css({
-              position: "absolute",
-              top: 0,   
-              left: 0,     
-              right: 0,                   
-              bottom: 0,
-              margin: "auto",
-              overflow: "hidden",
-              "z-index": 201,
-              background: "transparent",  
-          });        
-      $contentElementDiv.append(content[0].$element
+    layoutFunctions[2] = function(elementArray, content) {
+      var $contentElementDivs = [];
+      
+      $contentElementDivs[0] = $("<div></div>").addClass("simple-city-layout-single-h");               
+      $contentElementDivs[0].append(content[0].$element
                                   .addClass(Focalize.slideConfigData(slideIdx).cssClass))
                                   .css({"text-align":"center"});
-      $allContentElements = $allContentElements.add($contentElementDiv);
+      return $contentElementDivs;
     };
     
     // Layout function 3: a single element img
-    layoutFunctions[3] = function(elementArray) {
-      $contentElementDiv = $("<div></div>").addClass("simple-city-layout-single-img");                
+    layoutFunctions[3] = function(elementArray, content) {
+      var $contentElementDivs = [];
+      $contentElementDivs[0] = $("<div></div>").addClass("simple-city-layout-single-img");                
       
       // Image centered, takes all availabe height while keeping
       // aspect ratio. This seems a sensible choice as long as the 
@@ -465,59 +485,67 @@ var Focalize = (function () {
       // ratio, may mean that the whole picture is not shown). Landscape 
       // should be used in mobile devices anyway.
       // The display block + margins are necessary for the centering
-      $contentElementDiv.append(content[0].$element
+      $contentElementDivs[0].append(content[0].$element
                                   .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
                                             " simple-city-layout-single-img"));
       
-      $allContentElements = $allContentElements.add($contentElementDiv);
+      return $contentElementDivs;
     };
     
-    // Layout function 4: a single element img with a figcaption
-    layoutFunctions[4] = function(elementArray) {      
+    // Layout function 4: a single element img with a figcaption. If the
+    // figcaption comes first, it will be on top of the img. Otherwise,
+    // at the bottom
+    layoutFunctions[4] = function(elementArray, content) {      
+      var $contentElementDivs = [];
       var theFigCaption;
       var theImg;
       var aspectRatio;
       
-      if (content[0].type === "IMG") {
+      if (content[0].type === "IMG") { // Image on top
         theImg = content[0];
-        theFigCaption = content[1];
-      } else {
-        theImg = content[1];
-        theFigCaption = content[0];
-      }
-            
-            
-      aspectRatio = theImg.$element.height() > 0 ? theImg.$element.width() / theImg.$element.height()
-                                                 : 1;
-      
-      if (aspectRatio >= 1) { // img is wide, caption at the bottom        
+        theFigCaption = content[1];        
         // Image
-        $contentElementDiv = $("<div></div>").addClass("simple-city-layout-img-figcaption")
+        $contentElementDivs[0] = $("<div></div>").addClass("simple-city-layout-img-figcaption")
           .css({top:0,left:0,right:0, bottom:"15%"});                 
         // I use the same CSS style for the img than in the layout with single img
-        $contentElementDiv.append(theImg.$element
+        $contentElementDivs[0].append(theImg.$element
           .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
-                      " simple-city-layout-single-img"));               
-        $allContentElements = $allContentElements.add($contentElementDiv);
-        
+                      " simple-city-layout-single-img"));                               
         // FigCaption
-        $contentElementDiv = $("<div></div>").addClass("simple-city-layout-img-figcaption")
+        $contentElementDivs[1] = $("<div></div>").addClass("simple-city-layout-img-figcaption")
           .css({top:"86%",left:0,right:0,bottom:0});                 
+        $contentElementDivs[1].append(theFigCaption.$element
+          .addClass(Focalize.slideConfigData(slideIdx).cssClass).css({"text-align":"center"}));                              
+        
+      } else { // Caption on top
+        theImg = content[1];
+        theFigCaption = content[0];
 
-        $contentElementDiv.append(theFigCaption.$element
-          .addClass(Focalize.slideConfigData(slideIdx).cssClass).css({"text-align":"center"}));               
-        $allContentElements = $allContentElements.add($contentElementDiv);
+        // FigCaption
+        $contentElementDivs[0] = $("<div></div>").addClass("simple-city-layout-img-figcaption")
+          .css({top:0,left:0,right:0,bottom:"86%"});                 
+        $contentElementDivs[0].append(theFigCaption.$element
+          .addClass(Focalize.slideConfigData(slideIdx).cssClass).css({"text-align":"center"}));
         
-        
-      } else { // img is tall, caption at the right 
-        
+        // Image
+        $contentElementDivs[1] = $("<div></div>").addClass("simple-city-layout-img-figcaption")
+          .css({top:"15%",left:0,right:0, bottom:0});                 
+        // I use the same CSS style for the img than in the layout with single img
+        $contentElementDivs[1].append(theImg.$element
+          .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                      " simple-city-layout-single-img"));                               
       }
       
-      
+      return $contentElementDivs;
     };
     
     var chosenLayout = chooseLayoutType();
-    layoutFunctions[chosenLayout.layoutType](chosenLayout.elementArray);
+    $contentElementDivs = layoutFunctions[chosenLayout.layoutType](chosenLayout.elementArray, 
+                                                                   content);
+    
+    for (i = 0; i < $contentElementDivs.length; i++) {
+      $allContentElements = $allContentElements.add($contentElementDivs[i]);  
+    }
        
     return $contentDiv.append($allContentElements);
   };
@@ -539,10 +567,11 @@ var Focalize = (function () {
     // el font-size menor en cada categoría, y aplicárselo a todos, para que todos
     // tengan el mismo tamaño dentro de una misma categoría      
     var minimumSize = function (elementType, currentMin) {
+      var i;
       var $textFitSpan = $(elementType + " > .textFitted");
       var min = currentMin;
       var currSize;
-      for (var i = 0; i < $textFitSpan.length; i++) {
+      for (i = 0; i < $textFitSpan.length; i++) {
         currSize = parseFloat($textFitSpan.eq(i).css("font-size")); 
         if (currSize < min) {
           min = currSize;
@@ -551,9 +580,9 @@ var Focalize = (function () {
 
       // If min is "too big" it will not be very different from
       // the previous elements, so we force it to be smaller.
-      // 0.15 is a magic number. Should be a style decision
-      if (min > Math.floor(currentMin - 0.15 * currentMin)) {
-        min = Math.floor(currentMin - 0.15 * currentMin);
+      // 0.1 is a magic number. Should be a style decision
+      if (min > Math.floor(currentMin - 0.1 * currentMin)) {
+        min = Math.floor(currentMin - 0.1 * currentMin);
       }
       // We never allow the minimum font size below 5
       // (magic number, seems minimum enough)
@@ -611,6 +640,7 @@ var Focalize = (function () {
   
   
   Focalize.$createContentDiv = function(slideIdx) {
+    var i;
     var $contentDiv = $("<div></div>")
                     .addClass(Focalize.slideConfigData(slideIdx).contentLayerCSSClass);
     var $contentTextAreaDiv = $("<div></div>")
@@ -623,33 +653,11 @@ var Focalize = (function () {
     // are there; I want imgs and figcaptions
     var $validContentElements = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4,img,figcaption");
     
-    var j = 0; // I can't use i for the content array
-    var $children;
-    //console.log("validcontentelements length " + $validContentElements.length);
-    for (var i = 0; i < $validContentElements.length; i++) {
+    for (i = 0; i < $validContentElements.length; i++) {
       $currElem = $validContentElements.eq(i);  
-      //console.log($currElem.get(0).tagName.toUpperCase());
-      //if ($currElem.get(0).tagName.toUpperCase() === "FIGURE") {
-        
-        
-        /*
-        // We want the children img and figcaption, not figure itself
-        $children = $currElem.children("img,figcaption");
-        //console.log("length " + $currElem.children("img,figcaption").length);
-        for (var k = 0; k < $children.length; k++) {
-          $currElem = $children.eq(k);
-          content[j] = {};
-          content[j].type =  $currElem.get(0).tagName.toUpperCase(); // toUpperCase, just in case... ;-)
-          //console.log($currElem.get(0).tagName.toUpperCase());
-          content[j].$element = $currElem;
-          j += 1;          
-        }*/
-      //} else {      
-        content[j] = {};
-        content[j].type = $currElem.get(0).tagName.toUpperCase(); // toUpperCase, just in case... ;-)
-        content[j].$element = $currElem;
-        j += 1;
-      //}
+      content[i] = {};
+      content[i].type = $currElem.get(0).tagName.toUpperCase(); // toUpperCase, just in case... ;-)
+      content[i].$element = $currElem;      
     }
     $contentTextAreaDiv = Focalize.layoutContent(slideIdx, content, $contentTextAreaDiv);    
     
@@ -661,7 +669,7 @@ var Focalize = (function () {
   }; 
   
   /**
-   * Show slide with index newSlideIdx. The exact behaviour will depend
+   * Show slide with index newSlideIdx. The exact behavior will depend
    * on if there is a change of sequence, and if it is a "next" or "previous"
    * slide, or a different one.
    * callBackFunction will be called (if present) after the new slide
@@ -670,7 +678,7 @@ var Focalize = (function () {
    * @param newSlideIdx 
    * @param callBackFunction 
    */
-  Focalize.displaySlide = function(newSlideIdx, callBackFunction) {    
+  Focalize.displaySlide = function(newSlideIdx, callBackFunction) {  
     if (newSlideIdx < 0 || newSlideIdx > (Focalize.numSlides - 1)) {
       // The slide newSlideIdx does not exist. Do nothing.
       if (callBackFunction)
@@ -678,6 +686,7 @@ var Focalize = (function () {
       return;
     }
     
+    var i;
     var isSeqChange = false;
     var prevSlideInSeq = false;
     var nextSlideInSeq = false;
@@ -702,7 +711,7 @@ var Focalize = (function () {
       
       // Animate the animated layers of the new sequence      
       var newSeqConfigData = Focalize.seqConfigData(newSeqIdx);
-      for (var i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {
+      for (i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {
         // spritely scrolls fine with a width of 100%, but I need this width for the
         // "scroll transitions" between slides     
         $(".backToPan"+i).pan({fps: newSeqConfigData.animatedBackgroundLayers[i].framesPerSecond, 
@@ -739,12 +748,10 @@ var Focalize = (function () {
       // In first slide...
       addSlideToDisplay(); 
     } else { 
-
-     
       var seqConfigData = Focalize.seqConfigData(newSeqIdx);
       
       if (nextSlideInSeq) {
-        for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
+        for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
                                 Math.floor($("html").width()*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
@@ -753,18 +760,18 @@ var Focalize = (function () {
          
         /*$scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
-        });*/       
-        
+        });*/
+               
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
       } else if (prevSlideInSeq) {       
-        for (var i = 0; i < seqConfigData.backgroundLayers.length; i++) {
+        for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
                                 Math.floor($("html").width()*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
-        }  
-                
+        }
+        
         /*$scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
           $scrollingBack.spStart();
         });*/
@@ -855,7 +862,8 @@ var Focalize = (function () {
   };
   
   
-  Focalize.startPresentation = function () {     
+  Focalize.startPresentation = function () {
+    var i,j;     
     var $allSeqs = $(".focalize-sequence");
     
     Focalize.$slides = [];
@@ -871,14 +879,14 @@ var Focalize = (function () {
     
     Focalize.$slideDivs = [];
     
-    for (var i = 0; i < Focalize.numSeqs; i++) {
+    for (i = 0; i < Focalize.numSeqs; i++) {
       var $currSeq = $(".focalize-sequence").eq(i);
       var $currSeqSlides = $currSeq.find(".focalize-slide");
       Focalize.$seqs[i] = $currSeq;
       Focalize.seqNames[i] = $currSeq.data('seq-name');      
       Focalize.seqChanges[i] = Focalize.numSlides;
       Focalize.seqNumSlides[i] = $currSeqSlides.length;
-      for (var j = 0; j < $currSeqSlides.size(); j++) {
+      for (j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
         Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
         
@@ -930,9 +938,7 @@ var Focalize = (function () {
     
  
   };
-  
-
-  
-
   return Focalize;
-}());
+};
+
+var Focalize = FocalizeModule();
