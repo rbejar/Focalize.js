@@ -1,5 +1,4 @@
-Focalize.js
-===========
+# Focalize.js
 
 Dynamic HTML5 presentations. Now with 55% less dizziness and 30% more fun!
 For documentation and more information, go to the wiki:
@@ -9,10 +8,10 @@ For documentation and more information, go to the wiki:
 Focalize.js allows to create presentations in HTML5 that can be shown in modern web browsers.
 
 It is **different** from the usual suspects, and from the not-so-usual ones:
-* It encourages a strong separation from content and style; stronger than the templates that common presentation applications provide. This puts less control in the hands of those **creating** presentations and more control in the hands of those **designing** their styles.
+* It encourages a strong separation between content and style; stronger than the templates that common presentation applications provide. This puts less control in the hands of those **creating** presentations and more control in the hands of those **designing** their styles.
 * When every HTML5 designer out there is creating a web site with vertical parallax scroll, Focalize.js first approach is horizontal parallax scroll. Way cool, isn't it? xP
-* Flat design? No, please, don't do that... xD It may be possible to design a style for Focalize.js which can be labeled as flat, but it is not the best tool for that kind of design.
-* Will you feel dizzy after watching a Focalize.js presentation. Most probably you won't... xP
+* Flat design? No, please, don't do that... xD It may be possible to design a style for Focalize.js which can be labeled as flat, but it is not the best tool for that.
+* Will you feel dizzy after watching a Focalize.js presentation? Most probably you won't... xP
 
 # Audience
 * For now, myself (eat your own dog food...). In a short future, I expect that some brave, smart and good-looking early adopters could be interested.
@@ -25,10 +24,10 @@ I am one person working in my free time. I suggest patience, plenty of water and
 # License
 Focalize.js is [**GPL Version 3**](https://www.gnu.org/copyleft/gpl.html). 
 
-If some pieces may be released as plugins (e.g. jQuery plugins), libraries or components, I will probably release them with a dual MIT/GPL v3 license, but I will decide on a case-by-case basis.
+If some parts could be released as plugins (e.g. jQuery plugins), libraries or components, I will probably release them with a dual MIT/GPL v3 license, but I will decide on a case-by-case basis.
 
 # Credits
-Focalize.js uses a number of free components and libraries. As the list is evolving as the development goes on, it may be outdated. To be sure, you will have to look at the code, but I will try to keep it up to date.
+Focalize.js uses a number of free components and libraries. As the list is evolving as the development goes on, this document may be outdated, but I will try to keep it up to date.
 
 ## jQuery
 Copyright 2005, 2013 jQuery Foundation, Inc. and other contributors
@@ -54,4 +53,4 @@ Copyright 2010-2011, Peter Chater, Artlogic Media Ltd, <http://www.artlogic.net/
 Dual licensed under the MIT or GPL Version 2 licenses.
 
 ## Images for the simple city style
-All of them are public domain, downloaded from <http://www.openclipart.org>. Of course I have made a number of minor changes on some of them. If you created some of these images and want your name here, contact me.
+All of them are public domain, downloaded from <http://www.openclipart.org>. Of course I have made a number of minor, a few not-so-minor, changes on them. If you created some of these images and want your name here, contact me.
