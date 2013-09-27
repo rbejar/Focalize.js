@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">  
+  <title>Focalize.js example</title>
+  <link rel="stylesheet" type="text/css" href="focalizejs-style.css">
+  <link rel="stylesheet" type="text/css" href="simple-city-style/simple-city-style.css">
+      
+  <script src="lib/jquery-2.0.3.js"></script>
+  <script src='lib/jquery.transit.js'></script>
+  <script src="lib/jquery.fullscreen.js"></script>     
+  <script src="lib/textFit.js"></script>  
+  <script src="lib/jquery.spritely.js"></script>    
+  <script src="src/Focalize.js"></script>
+  <script src="simple-city-style/simple-city-style.js"></script>  
+  <script>Focalize.load();</script>
+</head>
+<body>
+
+<div class="focalize-presentation">
+  <div class="focalize-sequence" data-seq-name="SimpleCitySequence1">          
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+          <h1>Focalize.js</h1>
+          <h2>HTML5 dynamic presentations. Different</h2>                   
+          <h2>Strong separation between content and design</h2>
+          <h2>Flat design? Vertical parallax scroll? Look elsewhere ;-)</h2>
+        </section>
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>Layout is automagic</h1>
+            <h2>It works better in some cases than in others</h2>
+            <h3>Working on it...</h3>            
+            <h2>Layout should be a matter of design</h2>                                                                           
+        </section>
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>Browser support</h1>
+            <h2>For now, barely tested on Firefox and Chrome</h2>
+            <h3>Opera and Safari still have small problems</h3>            
+            <h3>No tested on IE yet</h3>
+            <h2>In my computer, Firefox is moving this better than Chrome</h2>                                                                          
+        </section>          
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>Simple City Style</h1>
+            <h2>The basic "simple city" style is <strong>not</strong> well designed</h2>            
+            <h2>It is a quick hack to show some ideas</h2>                                                   
+            <h3>And a way to test the software</h3>
+        </section>
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1_NoTitle">
+            <h2><strong>Important</strong> ideas should stand out</h2>            
+        </section>
+
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>An image</h1>            
+            <img src="assets/testdummy_800x800.png" alt="Tux Dummy" height="800" width="800">            
+        </section>              
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>An image with its caption</h1>
+            <figure>
+              <img src="assets/testdummy_800x800.png" alt="Tux Dummy" height="800" width="800">
+              <figcaption>Tux dummy. Caption can also be on top</figcaption>
+            </figure>
+        </section>                   
+        <section class="focalize-slide" data-slide-name="SimpleCitySlide1">
+            <h1>If the content is not supported, SHOW IT</h1>
+            <h2>Something</h2>
+            <h3>Other something</h3>
+            <img src="assets/testdummy_800x800.png" alt="Tux Dummy" height="800" width="800">            
+        </section>     
+  </div>
+</div>
+</body>
+</html>
