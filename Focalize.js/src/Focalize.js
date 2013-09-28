@@ -46,7 +46,7 @@ function FocalizeModule() {
    * @param styleJSON_URL
    * @deprecated
    */
-  Focalize.loadPresentation = function(styleJSON_URL) {
+  Focalize.loadPresentation_DEPRECATED = function(styleJSON_URL) {
     // I can't put this code inside the start function because
     // if I try to call fullScreen inside the getJSON callback
     // (to make sure the JSON is loaded before creating anything)
@@ -415,8 +415,8 @@ function FocalizeModule() {
       
       // elementWeights are relative to each other
       var elementWeights = {"H2": 1,
-                            "H3": 0.8,
-                            "H4": 0.65};  
+                            "H3": 0.75,
+                            "H4": 0.6};  
       // elementIndents are in percentage of the available width
       var elementIndents = {"H2": 0,
                             "H3": 3,
@@ -433,7 +433,7 @@ function FocalizeModule() {
       }  
       
       var numberOfGaps = numElements - 1;
-      var gapSize = 1; /*Percentage*/
+      var gapSize = 2; /*Percentage*/
       var totalPercentHeight = 100 - (gapSize * numberOfGaps);
       
       var currentElementHeight;
@@ -448,7 +448,7 @@ function FocalizeModule() {
             left: (0 + elementIndents[elementArray[i]])+"%",     
             right: 0,                   
             height: currentElementHeight+"%",
-            overflow: "hidden",
+            overflow: "visible",
             "z-index": 201,
             background: "transparent",  
           });        
@@ -580,9 +580,9 @@ function FocalizeModule() {
 
       // If min is "too big" it will not be very different from
       // the previous elements, so we force it to be smaller.
-      // 0.1 is a magic number. Should be a style decision
-      if (min > Math.floor(currentMin - 0.1 * currentMin)) {
-        min = Math.floor(currentMin - 0.1 * currentMin);
+      // 0.15 is a magic number. Should be a style decision
+      if (min > Math.floor(currentMin - 0.15 * currentMin)) {
+        min = Math.floor(currentMin - 0.15 * currentMin);
       }
       // We never allow the minimum font size below 5
       // (magic number, seems minimum enough)
@@ -674,7 +674,9 @@ function FocalizeModule() {
    * slide, or a different one.
    * callBackFunction will be called (if present) after the new slide
    * has been appended to the page (not necessarily after everything is completely
-   * adjusted and rendered) 
+   * adjusted and rendered).
+   * If the slide newSlideIdx does not index, this function does nothing
+   * except for calling the callBackFunction.
    * @param newSlideIdx 
    * @param callBackFunction 
    */
@@ -731,10 +733,28 @@ function FocalizeModule() {
     var $slideToRemove = $(".slideToDisplay");    
     
     
-    var addSlideToDisplay = function() {    
-      removeCurrentSlide();         
-      $(".seqToDisplay").append($slideToDisplay);      
+    var addSlideToDisplay = function(seqName, slideName) {    
+      removeCurrentSlide(); 
+      
+      // Maybe the user should have a certain degree of control
+      // on the use of transitions for slides (at least activate / deactivate
+      //  for a given slide)
+      
+      //$slideToDisplay.css({opacity:0.9, scale:0.8});                                
+      //$slideToDisplay.css({opacity:0, scale:0.5});
+      //$slideToDisplay.css({left:$("html").width()});
+      //$slideToDisplay.css({ rotateX: 180 });
+      Focalize.preInTransition($slideToDisplay, seqName, slideName);      
+      
+      $(".seqToDisplay").append($slideToDisplay);  
       Focalize.adjustContents($slideToDisplay);
+      
+      //$slideToDisplay.transition({ opacity:1, scale: 1 }, 300);
+      //$slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
+      //$slideToDisplay.transition({ x:"-="+$("html").width()+"px"}, "fast", "easeOutQuint");
+      //$slideToDisplay.transition({ rotateX: 0 }, "slow");    
+      Focalize.postInTransition($slideToDisplay, seqName, slideName);
+      
       if (callBackFunction)
         callBackFunction();
     };
@@ -744,41 +764,50 @@ function FocalizeModule() {
     };
  
     
+    
+    var seqConfigData = Focalize.seqConfigData(newSeqIdx);
+    var slideConfigData = Focalize.slideConfigData(newSlideIdx);
     if ($slideToRemove.length === 0) {
       // In first slide...
-      addSlideToDisplay(); 
+      addSlideToDisplay(seqConfigData.name, 
+                        slideConfigData.name); 
     } else { 
-      var seqConfigData = Focalize.seqConfigData(newSeqIdx);
+      
+      // Stop animated layers to facilitate its panning
+      for (i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {             
+        $(".backToPan"+i).spStop();
+      }
       
       if (nextSlideInSeq) {
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
                                 Math.floor($("html").width()*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
-                                +"px" }, "slow");
+                                +"px" }, 500);
         }  
          
-        /*$scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
-          $scrollingBack.spStart();
-        });*/
                
         $slideToRemove.css({position : "absolute", width : "100%"})
-                      .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
+                      .transition({ x: "-="+$("html").width()+"px" }, "slow", 
+                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});        
       } else if (prevSlideInSeq) {       
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
                                 Math.floor($("html").width()*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
-                                +"px" }, "slow");
+                                +"px" }, 500);
         }
-        
-        /*$scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
-          $scrollingBack.spStart();
-        });*/
+
 
         $slideToRemove.css({position : "absolute", width : "100%"})
-        .transition({ x: "+="+$("html").width()+"px" }, "slow", addSlideToDisplay);
+        .transition({ x: "+="+$("html").width()+"px" }, 500, 
+          function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
       } else { // IS A NEW SEQUENCE        
+      }
+      
+      // Restart animated layers 
+      for (i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {             
+        $(".backToPan"+i).spStart();
       }
     }
     
@@ -862,7 +891,7 @@ function FocalizeModule() {
   };
   
   
-  Focalize.startPresentation = function () {
+  Focalize.startPresentation = function () {    
     var i,j;     
     var $allSeqs = $(".focalize-sequence");
     

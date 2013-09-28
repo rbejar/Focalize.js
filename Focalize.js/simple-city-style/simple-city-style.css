@@ -139,7 +139,7 @@ div.foreground-trafficsign-textarea {
   left: 6%;      
   right: 6%;      
   bottom: 17%;
-  overflow: hidden;  
+  overflow: visible;  
   z-index: 201;  
   background: transparent;  
 } 
@@ -258,7 +258,7 @@ div.simple-city-layout-single-h {
   right: 0;                   
   bottom: 0;
   margin: auto;
-  overflow: hidden;
+  overflow: visible;
   z-index: 201;
   background: transparent;
 }
