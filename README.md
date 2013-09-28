@@ -47,10 +47,9 @@ Licensed under the MIT license
 Previously known as jQuery.textFit
 8/2013 by STRML <http://strml.github.com>
 MIT License
-## jQuery Spritely
-<http://spritely.net/>
-Copyright 2010-2011, Peter Chater, Artlogic Media Ltd, <http://www.artlogic.net/>
-Dual licensed under the MIT or GPL Version 2 licenses.
-
+## Motio
+<http://darsa.in/motio/>
+Copyright (C) 2013 <http://darsa.in>
+MIT License
 ## Images for the simple city style
-All of them are public domain, downloaded from <http://www.openclipart.org>. Of course I have made a number of minor, a few not-so-minor, changes on them. If you created some of these images and want your name here, contact me.
+All of them are public domain, downloaded from <http://www.openclipart.org>. Of course I have made a number of minor, and a few not-so-minor, changes on them. If you created some of these images and want your name here, contact me.
