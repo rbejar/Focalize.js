@@ -54,7 +54,7 @@ Focalize.styleConfiguration =
         "imageHeight" : 337,
         "scrollSpeed" : 0.14, /* Like the other background layers, relative among them */
         "framesPerSecond" : 30,
-        "panSpeed" : 1, /* In pixels per frame. */ 
+        "panSpeed" : 30, /* In pixels per second. */ 
         "pagesWide" : 0.62}                           
       ]
     }  
@@ -84,15 +84,13 @@ Focalize.styleConfiguration =
   ]
 };
 
-Focalize.preInTransition = function($slideToDisplay, seqName, slideName) {
-  console.log(slideName);
+Focalize.preInTransition = function($slideToDisplay, seqName, slideName) {  
   if (slideName === "SimpleCitySlide1_NoTitle") {
     $slideToDisplay.css({opacity:0, scale:0.5});
   } 
 };
 
 Focalize.postInTransition = function($slideToDisplay, seqName, slideName) {
-  console.log(slideName);
   if (slideName === "SimpleCitySlide1_NoTitle") {
     $slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
   }

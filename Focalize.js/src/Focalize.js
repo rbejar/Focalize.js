@@ -37,6 +37,7 @@ function FocalizeModule() {
   Focalize.$slideDivs = [];
   Focalize.slideNames = [];
   Focalize.styleConfiguration = {};
+  Focalize.motios = [];  
   
   /**
    * Used to start the presentation from a style JSON file. As this
@@ -250,8 +251,12 @@ function FocalizeModule() {
       $backLayerDiv =  $("<div></div>").addClass(seqConfigData.animatedBackgroundLayers[i].cssClass
                                                      +" backToScroll"+i+" backToPan"+i)
         .css({width: seqWidthPercent+"%",
-        "background-size":seqConfigData.animatedBackgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"});        
+              "background-size":seqConfigData.animatedBackgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"
+             });        
       $backgroundDiv.append($backLayerDiv);
+      
+      // Create motio object for animation
+      Focalize.motios[i] = new Motio($backLayerDiv.get(0));            
     }
     
     $seqDiv.append($backgroundDiv);
@@ -713,11 +718,10 @@ function FocalizeModule() {
       
       // Animate the animated layers of the new sequence      
       var newSeqConfigData = Focalize.seqConfigData(newSeqIdx);
-      for (i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {
-        // spritely scrolls fine with a width of 100%, but I need this width for the
-        // "scroll transitions" between slides     
-        $(".backToPan"+i).pan({fps: newSeqConfigData.animatedBackgroundLayers[i].framesPerSecond, 
-                          speed: newSeqConfigData.animatedBackgroundLayers[i].panSpeed, dir: 'left'});
+      for (i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {       
+        Focalize.motios[i].set('fps', newSeqConfigData.animatedBackgroundLayers[i].framesPerSecond);
+        Focalize.motios[i].set('speedX', -newSeqConfigData.animatedBackgroundLayers[i].panSpeed);
+        Focalize.motios[i].play();        
       }
 
     }
@@ -775,7 +779,7 @@ function FocalizeModule() {
       
       // Stop animated layers to facilitate its panning
       for (i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {             
-        $(".backToPan"+i).spStop();
+        Focalize.motios[i].pause();
       }
       
       if (nextSlideInSeq) {
@@ -807,7 +811,7 @@ function FocalizeModule() {
       
       // Restart animated layers 
       for (i = 0; i < seqConfigData.animatedBackgroundLayers.length; i++) {             
-        $(".backToPan"+i).spStart();
+        Focalize.motios[i].play();
       }
     }
     

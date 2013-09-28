@@ -15,7 +15,11 @@ div.simple-city-seq1-container {
 
 /* Background layers*/
 
-/* With SVG images it is slow as hell. With PNG images much better. */
+  /* Their background-sizes must be established in the code, as they depend on the number
+     of slides (is the only way I have found to prevent problems when the user
+     has her browser with a "weird" zoom level). It seems that way I do not
+     need the repeat-x */
+
 
 div.background-dessert {
   position: fixed;
@@ -25,10 +29,7 @@ div.background-dessert {
   height: 45%;
   overflow: hidden;
   z-index: -1000;
-  background: transparent url(background_dessert_1371x530_100dpi.png) repeat-x;
-  /* background-size must be established in the code, as it depends on the number
-    of slides (is the only way I have found to prevent problems when the user
-    has her browser with a "weird" zoom level) */
+  background: transparent url(background_dessert_1371x530_100dpi.png); /* repeat-x;*/  
 }
 
 div.background-clouds {
@@ -39,7 +40,7 @@ div.background-clouds {
   height: 28.75%;
   overflow: hidden;
   z-index: -900;
-  background: transparent url(clouds_1018x337_100dpi.png) repeat-x;
+  background: transparent url(clouds_1018x337_100dpi.png);/* repeat-x;*/
 }
 
 div.background-skyscrapers {
@@ -50,10 +51,7 @@ div.background-skyscrapers {
   height: 60%;
   overflow: hidden;
   z-index: -700;
-  background: transparent url(background_skyscrapers_2225x705_100dpi.png) repeat-x;
-  /* background-size must be established in the code, as it depends on the number
-     of slides (is the only way I have found to prevent problems when the user
-     has her browser with a "weird" zoom level) */
+  background: transparent url(background_skyscrapers_2225x705_100dpi.png);/* repeat-x;*/  
 }
 
 div.background-houses {
@@ -64,10 +62,7 @@ div.background-houses {
   height: 36%;
   overflow: hidden;
   z-index: -500;
-  background: transparent url(background_houses_2814x417_100dpi.png) repeat-x;  
-  /* background-size must be established in the code, as it depends on the number
-     of slides (is the only way I have found to prevent problems when the user
-     has her browser with a "weird" zoom level) */
+  background: transparent url(background_houses_2814x417_100dpi.png);/* repeat-x;*/  
 }
 
 
