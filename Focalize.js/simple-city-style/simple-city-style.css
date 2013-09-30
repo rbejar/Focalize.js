@@ -9,7 +9,7 @@ div.simple-city-seq1-container {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: DarkGray;
+  background-color: #4d4d4d;
   z-index: -2000;
 }
 
@@ -75,7 +75,7 @@ div.background-houses {
   height: 100%;
   overflow: hidden;
   background: transparent; 
-  z-index: 5000;
+  /*z-index: 5000;*/
 }
 
 div.foreground-billboard {
@@ -100,6 +100,16 @@ div.foreground-billboard-textarea {
   is big enough, it should not create problems */
   z-index: 201;  
   background: transparent;  
+}
+
+div.foreground-detail-basketball {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  overflow: hidden;
+  z-index: 700;
+  background: transparent url(basket_397x397_100dpi.png);
+  background-size: 100% 100%;
 }
 
 /* SLIDE STYLE 1: simple-city-seq1-slide1 (with and without title) */
@@ -128,16 +138,37 @@ div.foreground-trafficsign-no-title {
   background-size: 100% 100%; /* We take the full div with the image, no matter what */
 }
 
-div.foreground-trafficsign-textarea {
+div.foreground-trafficsign-textarea-buffer {
+  /* This is used as a buffer to leave some room for overflow in the
+   * contents of the traffic sign (required to cope with limitations
+   * in the layouts), but not enough to allow these contents
+   * to overflow in the support of traffic sign (which looks quite terrible
+   * when it happens, though it only happens in really difficult circumstances, as 
+   * when the user changes the orientation of its mobile device in the
+   * middle of a presentation) */
   position: absolute; /* this will be relative to the foreground-trafficsign[-no-title] */
-  top: 10%;   
-  left: 6%;      
-  right: 6%;      
-  bottom: 17%;
-  overflow: visible;  
+  top: 8%; 
+  left: 3.5%;      
+  right: 3.5%;      
+  bottom: 14%;
+  overflow: hidden; 
   z-index: 201;  
   background: transparent;  
-} 
+}
+
+div.foreground-trafficsign-textarea {
+  position: absolute; /* this will be relative to the foreground-trafficsign-textarea-buffer */
+  top: 1.5%;  /* Generally speaking, because of layout limitations, it seems
+               safer to leave a small margin on top than in the bottom */ 
+  left: 2.5%;      
+  right: 2.5%;      
+  bottom: 3%;
+  overflow: visible; /* I have tried overflow-y visible and overflow-x hidden, for a
+  better result in small screens in portrait, but when those two properties are set like
+  that, it turns out that visible becomes auto, and scroll bars appear */
+  z-index: 201;  
+  background: transparent;  
+}  
 
 
 h1.simple-city-seq1-slide1 {
@@ -224,7 +255,7 @@ figcaption.simple-city-seq1-slide1 {
 img.simple-city-seq1-slide1 {
 	border-style:solid;
   border-width:2px;
-  border-color: darkgray;
+  border-color: #4d4d4d;
 	/*box-shadow: 1px 1px 2px white;*/
 	border-radius: 3px;
 }
@@ -258,14 +289,6 @@ div.simple-city-layout-single-h {
   background: transparent;
 }
 
-img.simple-city-layout-single-img {
-  display: block;
-  height: 100%; 
-  width: auto;
-  margin-left: auto;
-  margin-right: auto; 
-}
-
 div.simple-city-layout-img-figcaption {
   position: absolute;                     
   margin: auto;
@@ -275,6 +298,91 @@ div.simple-city-layout-img-figcaption {
   padding-top: 4px; /* Leave some room for margins and shadows in the image */
   padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
 }
+
+div.simple-city-layout-img-top {
+  position: absolute;
+  top: 0;
+  left: 0;     
+  right: 0;                     
+  height: 48%;   
+  margin: auto;
+  overflow: visible;
+  z-index: 201;
+  background: transparent;  
+  padding-top: 4px; /* Leave some room for margins and shadows in the image */
+  padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+div.simple-city-layout-img-bottom {
+  position: absolute;
+  top: 52%;
+  left: 0;     
+  right: 0;                     
+  height: 48%; 
+  margin: auto;
+  overflow: visible;
+  z-index: 201;
+  background: transparent;  
+  padding-top: 4px; /* Leave some room for margins and shadows in the image */
+  padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+div.simple-city-layout-img-left {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;                      
+  width: 48%; 
+  margin: auto;
+  overflow: visible;
+  z-index: 201;
+  background: transparent;  
+  padding-top: 4px; /* Leave some room for margins and shadows in the image */
+  padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+div.simple-city-layout-img-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;                       
+  width: 48%; 
+  margin: auto;
+  overflow: visible;
+  z-index: 201;
+  background: transparent;  
+  padding-top: 4px; /* Leave some room for margins and shadows in the image */
+  padding-bottom: 4px; /* Leave some room for margins and shadows in the image */
+}
+
+img.simple-city-layout-single-img {
+  display: block;
+  height: 100%; 
+  width: auto;
+  margin-left: auto;
+  margin-right: auto; 
+}
+
+img.simple-city-layout-full-width {
+  /* This is vertically centered */  
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  height: auto; 
+  width: 100%;  
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+img.simple-city-layout-full-height {
+  /* This is horizontally centered */
+  display: block;
+  height: 100%; 
+  width: auto;
+  margin-left: auto;
+  margin-right: auto; 
+}
+
 
 
 
