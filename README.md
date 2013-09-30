@@ -11,7 +11,7 @@ It is **different** from the usual suspects, and from the not-so-usual ones:
 * It encourages a strong separation between content and style; stronger than the templates that common presentation applications provide. This puts less control in the hands of those **creating** presentations and more control in the hands of those **designing** their styles.
 * When every HTML5 designer out there is creating a web site with vertical parallax scroll, Focalize.js first approach is horizontal parallax scroll. Way cool, isn't it? xP
 * Flat design? No, please, don't do that... xD It may be possible to design a style for Focalize.js which can be labeled as flat, but it is not the best tool for that.
-* Will you feel dizzy after watching a Focalize.js presentation? Most probably you won't... xP
+* Will you feel dizzy after watching a Focalize.js presentation? Most probably you won't, but I can't promise... xP
 
 ## Audience
 * For now, myself (eat your own dog food...). In a short future, I expect that some brave, smart and good-looking early adopters could be interested.
