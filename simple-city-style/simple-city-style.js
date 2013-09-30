@@ -53,8 +53,8 @@ Focalize.styleConfiguration =
         "imageWidth" : 1018,
         "imageHeight" : 337,
         "scrollSpeed" : 0.14, /* Like the other background layers, relative among them */
-        "framesPerSecond" : 30,
-        "panSpeed" : 1, /* In pixels per frame. */ 
+        "framesPerSecond" : 60,
+        "panSpeed" : 25, /* In pixels per second. */ 
         "pagesWide" : 0.62}                           
       ]
     }  
@@ -66,11 +66,13 @@ Focalize.styleConfiguration =
       "cssClass": "simple-city-seq1-slide1",
       "titleLayerCSSClass": "foreground-billboard",
       "titleTextAreaCSSClass": "foreground-billboard-textarea",
-      "contentLayerCSSClass": "foreground-trafficsign",
-      "contentTextAreaCSSClass": "foreground-trafficsign-textarea"
+      "contentLayerCSSClass": "foreground-trafficsign",      
+      "contentTextAreaCSSClass": "foreground-trafficsign-textarea",
+      /* This buffer element is required. If you don't use it, put an empty string */
+      "contentTextAreaBufferCSSClass": "foreground-trafficsign-textarea-buffer"
     },
     {
-      "name": "SimpleCitySlide1_NoTitle", // 
+      "name": "SimpleCitySlide1_NoTitle",
       "applicableToSeqs": ["SimpleCitySequence1"],
       "cssClass": "simple-city-seq1-slide1",
       "titleLayerCSSClass": "",
@@ -78,8 +80,20 @@ Focalize.styleConfiguration =
       "contentLayerCSSClass": "foreground-trafficsign-no-title",
       // I haven't forgotten changing contentTextAreaCSSClass. As is positioning
       // and size are relative to the contentLayerCSSClass, I can keep the CSS class
-      "contentTextAreaCSSClass": "foreground-trafficsign-textarea" 
-                                                                   
+      "contentTextAreaCSSClass": "foreground-trafficsign-textarea",
+      "contentTextAreaBufferCSSClass": "foreground-trafficsign-textarea-buffer"                                                                   
     }
   ]
+};
+
+Focalize.preInTransition = function($slideToDisplay, seqName, slideName) {
+  if (slideName === "SimpleCitySlide1_NoTitle") {
+    $slideToDisplay.css({opacity:0, scale:0.5});
+  } 
+};
+
+Focalize.postInTransition = function($slideToDisplay, seqName, slideName) {
+  if (slideName === "SimpleCitySlide1_NoTitle") {
+    $slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
+  }
 };

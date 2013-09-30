@@ -37,6 +37,7 @@ function FocalizeModule() {
   Focalize.$slideDivs = [];
   Focalize.slideNames = [];
   Focalize.styleConfiguration = {};
+  Focalize.motios = [];  
   
   /**
    * Used to start the presentation from a style JSON file. As this
@@ -46,7 +47,7 @@ function FocalizeModule() {
    * @param styleJSON_URL
    * @deprecated
    */
-  Focalize.loadPresentation = function(styleJSON_URL) {
+  Focalize.loadPresentation_DEPRECATED = function(styleJSON_URL) {
     // I can't put this code inside the start function because
     // if I try to call fullScreen inside the getJSON callback
     // (to make sure the JSON is loaded before creating anything)
@@ -86,6 +87,18 @@ function FocalizeModule() {
           "onclick='Focalize.notFullScreenStart()'>" +
           "<h2>Start presentation (not full screen)</h2></button>");
     });
+  };
+  
+  /**
+   * Returns if the screen is in landscape (width > height). By
+   * default it returns true (i.e. if it does not know, it assumes it is).
+   */
+  Focalize.isLandscapeScreen = function() {    
+    if ($(window).height() > 0) {
+      return ($(window).width() > $(window).height());
+    } else {
+      return true;
+    }   
   };
   
   /**
@@ -250,8 +263,12 @@ function FocalizeModule() {
       $backLayerDiv =  $("<div></div>").addClass(seqConfigData.animatedBackgroundLayers[i].cssClass
                                                      +" backToScroll"+i+" backToPan"+i)
         .css({width: seqWidthPercent+"%",
-        "background-size":seqConfigData.animatedBackgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"});        
+              "background-size":seqConfigData.animatedBackgroundLayers[i].pagesWide*100/Focalize.seqNumSlides[seqIdx]+"% 100%"
+             });        
       $backgroundDiv.append($backLayerDiv);
+      
+      // Create motio object for animation
+      Focalize.motios[i] = new Motio($backLayerDiv.get(0));            
     }
     
     $seqDiv.append($backgroundDiv);
@@ -320,6 +337,7 @@ function FocalizeModule() {
       // 3: a single img
       // 4: a single img along with a single figcaption (I assume they are enclosed
       //    in a figure element, but I do not take that into account)
+      // 5: several imgs (2..N) DEFINE N!
       // ...      
       
       var i;
@@ -357,20 +375,28 @@ function FocalizeModule() {
                       numOfEachElement["H3"] +
                       numOfEachElement["H4"];
       
+      var returnedLayoutType = 0;
+      
       if (numOfEachElement["UNSUPPORTED"] > 0) {
-        return {layoutType:0, elementArray: elementTypeArray};
+        returnedLayoutType = 0;
       } else if (numH2H3H4 === 1 && numOfEachElement["IMG"] === 0) {
-        return {layoutType:2, elementArray: elementTypeArray};
+        returnedLayoutType = 2;
       } else if (numH2H3H4 > 1 && numOfEachElement["IMG"] === 0) {
-        return {layoutType:1, elementArray: elementTypeArray};
+        returnedLayoutType = 1;
       } else if (numH2H3H4 === 0 && numOfEachElement["IMG"] === 1 &&
                  numOfEachElement["FIGCAPTION"] === 0) {
-        return {layoutType:3, elementArray: elementTypeArray};
+        returnedLayoutType = 3;
       } else if (numOfEachElement["FIGCAPTION"]===1 && numOfEachElement["IMG"] === 1) {
-        return {layoutType:4, elementArray: elementTypeArray};
-      } else {
-        return {layoutType:0, elementArray: elementTypeArray};
-      }     
+        returnedLayoutType = 4;
+      } else if (numH2H3H4 === 0 && numOfEachElement["IMG"] > 1 &&
+                 numOfEachElement["FIGCAPTION"] === 0) {
+        returnedLayoutType = 5;
+      }       
+      else {
+        returnedLayoutType = 0;
+      }
+      
+      return  {layoutType: returnedLayoutType, elementArray: elementTypeArray};     
     };    
     
     /**
@@ -539,6 +565,68 @@ function FocalizeModule() {
       return $contentElementDivs;
     };
     
+    // Layout function 5: all elements are img (more than one)
+    layoutFunctions[5] = function(elementArray, content) {
+      var i;
+      var cssString;
+      var $contentElementDivs = [];
+      var numElements = elementArray.length;
+      var aspectRatios = [];
+      
+      for (i = 0; i < numElements; i++) {
+        aspectRatios[i] = content[i].$element.height() > 0 ?
+                            content[i].$element.width() / content[i].$element.height() : 1; 
+      }
+      
+      // I will be assuming landscape mode by default, as it should
+      // be (in desktops is not a problem, but in mobile it could be)
+      // Some adjustments in Focalize.adjustContents could be done...
+      
+      // 2 images, layout top/down or left/right according to
+      // their aspect ratios. If undecided, left/right
+      if (numElements === 2) {
+        if (aspectRatios[0] > 1 && aspectRatios[1] > 1) {
+          // top/down          
+          
+          $contentElementDivs[0] = $("<div></div>").addClass("simple-city-layout-img-top");
+          $contentElementDivs[0].append(content[0].$element
+                                .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                                          " simple-city-layout-full-height"));
+          
+          $contentElementDivs[1] = $("<div></div>").addClass("simple-city-layout-img-bottom");
+          $contentElementDivs[1].append(content[1].$element
+                                .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                                          " simple-city-layout-full-height"));                    
+        } else { 
+          // left/right
+          // In this case, check aspect ratios individually to choose css class
+          if (aspectRatios[0] < 1) {
+            cssString = "simple-city-layout-full-height";
+          } else {
+            cssString = "simple-city-layout-full-width";
+          }
+          $contentElementDivs[0] = $("<div></div>").addClass("simple-city-layout-img-left");
+          $contentElementDivs[0].append(content[0].$element
+                                .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                                          " " + cssString));
+          if (aspectRatios[1] < 1) {
+            cssString = "simple-city-layout-full-height";
+          } else {
+            cssString = "simple-city-layout-full-width";
+          }
+          $contentElementDivs[1] = $("<div></div>").addClass("simple-city-layout-img-right");
+          $contentElementDivs[1].append(content[1].$element
+                                .addClass(Focalize.slideConfigData(slideIdx).cssClass + 
+                                          " " + cssString));       
+        }
+      }
+      
+      return $contentElementDivs;     
+    };
+    
+    
+    
+    
     var chosenLayout = chooseLayoutType();
     $contentElementDivs = layoutFunctions[chosenLayout.layoutType](chosenLayout.elementArray, 
                                                                    content);
@@ -600,6 +688,17 @@ function FocalizeModule() {
     currentMin = minimumSize("h3", currentMin);
     currentMin = minimumSize("h4", currentMin);  
     
+    // TODO: some fitting could be done with images too. For instance
+    // if the user has changed from landscape to portrait in the
+    // middle of the presentation (something that should be avoided), 
+    // we may choose to adjust images differently in their containers. We
+    // may change these images css class from simple-city-layout-full-width to
+    // simple-city-layout-full-height (or vice versa), or even we may
+    // choose to change the layout (this would be far more work)
+    
+    
+    
+    
     /* Alternatives to fitText that I've tried with
      * worse results.
      */
@@ -642,9 +741,12 @@ function FocalizeModule() {
   Focalize.$createContentDiv = function(slideIdx) {
     var i;
     var $contentDiv = $("<div></div>")
-                    .addClass(Focalize.slideConfigData(slideIdx).contentLayerCSSClass);
+      .addClass(Focalize.slideConfigData(slideIdx).contentLayerCSSClass);
     var $contentTextAreaDiv = $("<div></div>")
-                            .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaCSSClass);
+      .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaCSSClass);
+    var $contentTextAreaBufferDiv = $("<div></div>")                            
+      .addClass(Focalize.slideConfigData(slideIdx).contentTextAreaBufferCSSClass);
+                            
     
     var $currElem;
     var content = [];
@@ -664,7 +766,8 @@ function FocalizeModule() {
     // Could I use a layout plugin? My first tests with jLayout have
     // not been very successful, and my needs do not seem complex...
     
-    $contentDiv.append($contentTextAreaDiv);
+    $contentDiv.append($contentTextAreaBufferDiv);
+    $contentTextAreaBufferDiv.append($contentTextAreaDiv);
     return $contentDiv;  
   }; 
   
@@ -674,7 +777,9 @@ function FocalizeModule() {
    * slide, or a different one.
    * callBackFunction will be called (if present) after the new slide
    * has been appended to the page (not necessarily after everything is completely
-   * adjusted and rendered) 
+   * adjusted and rendered).
+   * If the slide newSlideIdx does not index, this function does nothing
+   * except for calling the callBackFunction.
    * @param newSlideIdx 
    * @param callBackFunction 
    */
@@ -711,11 +816,10 @@ function FocalizeModule() {
       
       // Animate the animated layers of the new sequence      
       var newSeqConfigData = Focalize.seqConfigData(newSeqIdx);
-      for (i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {
-        // spritely scrolls fine with a width of 100%, but I need this width for the
-        // "scroll transitions" between slides     
-        $(".backToPan"+i).pan({fps: newSeqConfigData.animatedBackgroundLayers[i].framesPerSecond, 
-                          speed: newSeqConfigData.animatedBackgroundLayers[i].panSpeed, dir: 'left'});
+      for (i = 0; i < newSeqConfigData.animatedBackgroundLayers.length; i++) {       
+        Focalize.motios[i].set('fps', newSeqConfigData.animatedBackgroundLayers[i].framesPerSecond);
+        Focalize.motios[i].set('speedX', -newSeqConfigData.animatedBackgroundLayers[i].panSpeed);
+        Focalize.motios[i].play();        
       }
 
     }
@@ -731,25 +835,66 @@ function FocalizeModule() {
     var $slideToRemove = $(".slideToDisplay");    
     
     
-    var addSlideToDisplay = function() {    
-      removeCurrentSlide();         
-      $(".seqToDisplay").append($slideToDisplay);      
+    var addSlideToDisplay = function(seqName, slideName) {    
+      removeCurrentSlide(); 
+      
+      // Maybe the user should have a certain degree of control
+      // on the use of transitions for slides (at least activate / deactivate
+      //  for a given slide)
+      
+      //$slideToDisplay.css({opacity:0.9, scale:0.8});                                
+      //$slideToDisplay.css({opacity:0, scale:0.5});
+      //$slideToDisplay.css({left:$("html").width()});
+      //$slideToDisplay.css({ rotateX: 180 });
+      Focalize.preInTransition($slideToDisplay, seqName, slideName);      
+      
+      $(".seqToDisplay").append($slideToDisplay);  
       Focalize.adjustContents($slideToDisplay);
+      
+      //var $foregroundGround = $("<div></div>").css({position:"fixed",bottom: 0, 
+      //                                              left:0, right:0, width:"100%", height:"5px"});
+      //var $foregroundDetail = $("<div></div>").addClass("foreground-detail-basketball")
+      //                          .css({position:"fixed", bottom: "40%", right:"10%"}); 
+      
+      
+      //$slideToDisplay.transition({ opacity:1, scale: 1 }, 300);
+      //$slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
+      //$slideToDisplay.transition({ x:"-="+$("html").width()+"px"}, "fast", "easeOutQuint");
+      //$slideToDisplay.transition({ rotateX: 0 }, "slow");    
+      Focalize.postInTransition($slideToDisplay, seqName, slideName);
+      
+      //$slideToDisplay.append($foregroundGround);
+      //$slideToDisplay.append($foregroundDetail);
+      
+          
+      // Initiate physics world and start simulation
+      // Slant gravity for testing
+      //$.physix2d.init({gravity:new Box2D.b2Vec2(-1, -10)});      
+      
+      //$foregroundGround.toPhysix2dBody({type:"static", restitution: 0.5});                      
+      //$foregroundDetail.toPhysix2dBody({shape:"circle", restitution:0.8});
+      
+      //$.physix2d.startSimulation();
+      
       if (callBackFunction)
         callBackFunction();
     };
     
     var removeCurrentSlide = function() {
+      //$.physix2d.stopSimulation();
       $slideToRemove.remove();      
     };
  
     
+    
+    var seqConfigData = Focalize.seqConfigData(newSeqIdx);
+    var slideConfigData = Focalize.slideConfigData(newSlideIdx);
     if ($slideToRemove.length === 0) {
       // In first slide...
-      addSlideToDisplay(); 
+      addSlideToDisplay(seqConfigData.name, 
+                        slideConfigData.name); 
     } else { 
-      var seqConfigData = Focalize.seqConfigData(newSeqIdx);
-      
+            
       if (nextSlideInSeq) {
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
@@ -758,12 +903,10 @@ function FocalizeModule() {
                                 +"px" }, "slow");
         }  
          
-        /*$scrollingBack.transition({ x: "-="+$("html").width()/4+"px" }, "slow", function() {
-          $scrollingBack.spStart();
-        });*/
                
         $slideToRemove.css({position : "absolute", width : "100%"})
-                      .transition({ x: "-="+$("html").width()+"px" }, "slow", addSlideToDisplay);        
+                      .transition({ x: "-="+$("html").width()+"px" }, "slow", 
+                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});        
       } else if (prevSlideInSeq) {       
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
@@ -771,15 +914,14 @@ function FocalizeModule() {
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
         }
-        
-        /*$scrollingBack.transition({ x: "+="+$("html").width()/4+"px" }, "slow", function() {
-          $scrollingBack.spStart();
-        });*/
+
 
         $slideToRemove.css({position : "absolute", width : "100%"})
-        .transition({ x: "+="+$("html").width()+"px" }, "slow", addSlideToDisplay);
+        .transition({ x: "+="+$("html").width()+"px" }, "slow", 
+          function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
       } else { // IS A NEW SEQUENCE        
       }
+      
     }
     
     
@@ -862,7 +1004,7 @@ function FocalizeModule() {
   };
   
   
-  Focalize.startPresentation = function () {
+  Focalize.startPresentation = function () {    
     var i,j;     
     var $allSeqs = $(".focalize-sequence");
     
@@ -923,20 +1065,13 @@ function FocalizeModule() {
     });
     
     Focalize.attachEventHandlers();
+ 
     
     // Display first slide to start the "presentation loop"
     Focalize.displaySlide(0);
     
-    
-    
-    
-    // QUICK PHYSICX2D TEST... 
-    
-    //$.physix2d.init();
-    //$("h1,h2,h3").physix2d_ToBody();
-    //$.physix2d.simulate();
-    
- 
+
+
   };
   return Focalize;
 };
