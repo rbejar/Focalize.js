@@ -39,9 +39,9 @@ jQuery Transit - CSS3 transitions and transformations
 MIT Licensed.
 <http://ricostacruz.com/jquery.transit>
 <http://github.com/rstacruz/jquery.transit>
-### jQuery Fullscreen
-<https://github.com/kayahr/jquery-fullscreen-plugin>
-Copyright (C) 2012 Klaus Reimer <k@ailis.de>
+### jQuery fullscreen
+<https://github.com/private-face/jquery.fullscreen>
+Copyright © 2013 Vladimir Zhuravlev
 Licensed under the MIT license
 ### TextFit
 Previously known as jQuery.textFit
