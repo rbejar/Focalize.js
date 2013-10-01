@@ -147,44 +147,19 @@ function FocalizeModule() {
   };
   
   Focalize.fullScreenStart = function () {   
-    $(document).ready(function(){
-      // Go to full screen
-      $(document).fullScreen(true);
-      $(document).bind("fullscreenchange", function() {
-        if ($(document).fullScreen()) {       
-          $('.remove-before-start').remove();         
-          
-          // CREO QUE SIMPLEMENTE RETRASANDO LA LLAMADA A START HASTA
-          // QUE EL BOTTON HA SIDO EFECTIVAMENTE ELIMINADO HARÁ QUE
-          // SE COJA EL TAMAÑO FULL SCREEN SIN MÁRGENES. PARECE
-          // QUE SI NO, EL NAVEGADOR ESTÁ TODAVÍA "RECOLOCÁNDOSE" Y
-          // PUEDEN SALIR MÁRGENES INDESEADOS...
-          
-            // CON ESTA PAUSA DE 2 SEGUNDOS A PIÑÓN VA BIEN, PERO SERÍA MEJOR
-          // QUE ESTO FUERA POR EVENTO...
-          setTimeout(Focalize.startPresentation, 2000);
-        } else {
-          // Si salimos de full screen, de momento no hago nada
-            // Debería poner la presentación en un estado "continuable" o bien
-          // "resetearla" y explicar al usuario lo que puede hacer
-        }    
-      });  
+    $(document).ready(function() {
+      $("html").bind("fscreenopen", function() {       
+        $('.remove-before-start').remove();         
+        Focalize.startPresentation();     
+      });    
+      $("html").fullscreen();
     });
-  };
+  }; 
   
   Focalize.notFullScreenStart = function () {   
     $(document).ready(function(){
       $('.remove-before-start').remove();         
-          
-          // CREO QUE SIMPLEMENTE RETRASANDO LA LLAMADA A START HASTA
-          // QUE EL BOTTON HA SIDO EFECTIVAMENTE ELIMINADO HARÁ QUE
-          // SE COJA EL TAMAÑO FULL SCREEN SIN MÁRGENES. PARECE
-          // QUE SI NO, EL NAVEGADOR ESTÁ TODAVÍA "RECOLOCÁNDOSE" Y
-          // PUEDEN SALIR MÁRGENES INDESEADOS...
-          
-            // CON ESTA PAUSA DE 2 SEGUNDOS A PIÑÓN VA BIEN, PERO SERÍA MEJOR
-          // QUE ESTO FUERA POR EVENTO...
-          setTimeout(Focalize.startPresentation, 2000); 
+      Focalize.startPresentation(); 
     });
   };
   
