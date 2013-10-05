@@ -24,6 +24,9 @@ function FocalizeModule() {
   //function privateMethod() {
     // ...
   //}
+  
+  Focalize.ValidStates = {onPresentation : "ON PRESENTATION", 
+                          onThumbnails : "ON THUMBNAILS"};
 
   Focalize.currSlideIdx = 0;
   Focalize.currSeqIdx = 0;
@@ -38,6 +41,8 @@ function FocalizeModule() {
   Focalize.slideNames = [];
   Focalize.styleConfiguration = {};
   Focalize.motios = [];  
+  Focalize.$thumbContainer = null;
+  Focalize.status = Focalize.ValidStates.onPresentation;
   
   /**
    * Used to start the presentation from a style JSON file. As this
@@ -263,14 +268,18 @@ function FocalizeModule() {
    * be an empty div if the slide has no title (i.e. if its
    * titleLayerCSSClass is an empty string).
    */
-  Focalize.$createTitleDiv = function($titleContents, slideIdx) {
+  Focalize.$createTitleDiv = function(slideIdx) {
     var $titleDiv;
-    var $titleTextAreaDiv;
+    var $titleTextAreaDiv;    
+    var $titleContents;
+    
     if (Focalize.slideConfigData(slideIdx).titleLayerCSSClass !== "") {
       $titleDiv = $("<div></div>")
                     .addClass(Focalize.slideConfigData(slideIdx).titleLayerCSSClass);       
       $titleTextAreaDiv = $("<div></div>")
-                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);    
+                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);
+      $titleContents = Focalize.$slides[slideIdx].find("h1")
+                       .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);    
       $titleTextAreaDiv.append($titleContents);
       $titleDiv.append($titleTextAreaDiv);     
     } else { // No title
@@ -620,11 +629,11 @@ function FocalizeModule() {
    * fitting may work properly
    */
   Focalize.adjustContents = function($slideToDisplay) {
-    // 200 as maxFontSize means: make it as big as it gets
+    // 500 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
-    textFit($slideToDisplay.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 200});
-    textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 200});
-    textFit($slideToDisplay.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 200});
+    textFit($slideToDisplay.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToDisplay.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
     
     // Tras aplicar el textFit a los elementos, ver cual tiene
     // el font-size menor en cada categoría, y aplicárselo a todos, para que todos
@@ -905,7 +914,7 @@ function FocalizeModule() {
   };
   
   Focalize.keyPresentationHandler = function(event) {        
-    // console.log(event.which);
+    console.log(event.which);
     // which is normalized among browsers, keyCode is not
 
     // The idea behind the detachEventHandlers() is to prevent a 
@@ -931,6 +940,15 @@ function FocalizeModule() {
       case 8: // backspace
         Focalize.detachEventHandlers();
         Focalize.previousSlide();
+        event.preventDefault();
+        event.stopPropagation();
+        break;
+      case 112: // F1
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {
+          Focalize.showThumbs();
+        } else {
+          Focalize.hideThumbs();
+        }
         event.preventDefault();
         event.stopPropagation();
         break;
@@ -1006,10 +1024,8 @@ function FocalizeModule() {
       for (j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
         Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
-        
-        var $titleH1 = Focalize.$slides[Focalize.numSlides].find("h1")
-                        .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);              
-        var $titleDiv = Focalize.$createTitleDiv($titleH1, Focalize.numSlides);        
+                              
+        var $titleDiv = Focalize.$createTitleDiv(Focalize.numSlides);        
         var $slideChildren = $titleDiv;
         
         //Focalize.$slides[Focalize.numSlides].find("ul,li")
@@ -1019,16 +1035,10 @@ function FocalizeModule() {
         // children, only the ul itself seems to be selected. That is the reason why
         // this clone is not need with elements without children, like the H1
         // I DO NOT UNDERSTAND THIS VERY WELL...
-        //var $contentUL = Focalize.$slides[Focalize.numSlides].find("ul").eq(0).clone();
+        //var $contentUL = Focalize.$slides[Focalize.numSlides].find("ul").eq(0).clone();        
         
-        
-        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);        
-        
-        
+        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);                
         $slideChildren = $slideChildren.add($contentDiv);
-        
-        //var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simple-city-seq1-slide1");        
-
         Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
         Focalize.numSlides += 1;
       }     
@@ -1040,14 +1050,147 @@ function FocalizeModule() {
     });
     
     Focalize.attachEventHandlers();
+    
+    // Create thumbContainer now that the slides have been loaded
+    Focalize.$thumbContainer = Focalize.createThumbContainer(3);
+    Focalize.$thumbContainer.hide();
+    $(".focalize-presentation").after(Focalize.$thumbContainer);
+       
+
  
     
     // Display first slide to start the "presentation loop"
-    Focalize.displaySlide(0);
-    
-
-
+    Focalize.displaySlide(0);    
   };
+  
+  Focalize.showThumbs = function() {
+    Focalize.status = Focalize.ValidStates.onTumbnails;        
+    Focalize.$thumbContainer.show();
+      // We must delay the adjust Contents (i.e. text fitting) until
+      // we actually have our thumbnails "on screen"
+    Focalize.adjustContents(Focalize.$thumbContainer);
+      
+  };
+  
+  Focalize.hideThumbs = function() {
+    Focalize.status = Focalize.ValidStates.onPresentation;
+    $(".thumbContainer").hide();
+  };
+  
+  Focalize.createThumbContainer = function(nCols) {
+    if (!nCols) {
+      var nCols = 4;
+    }
+    
+    var i,j, numSlide;
+    var $titleDiv, $contentDiv, $thumbContainer;
+    var colWeights = [];
+    var rowWeights = [];
+    var zIndex = 30000;
+    var nRows = Math.ceil(Focalize.numSlides / nCols);    
+    
+    for (i = 0; i < nCols; i++) {
+      colWeights[i] = 1;
+    }
+    
+    for (i = 0; i < nRows; i++) {
+      rowWeights[i] = 1;
+    }
+    
+    $thumbContainer = $("<div></div>").addClass("thumbContainer")
+      .css({
+        position: "fixed",
+        top: 0,   
+        left: 0,     
+        right: 0,                   
+        bottom: 0,
+        overflow: "auto",
+        "z-index": 30000,
+        background: "black",  
+      });     
+    
+    // Create a grid of divs to show the thumbnails of each slide
+    var $divs = Focalize.createDivGrid(nCols, nRows, 0.5, 0.5, colWeights, rowWeights, zIndex);    
+         
+    
+    numSlide = 0;
+    for (i = 0; i < nRows; i++) {
+      for (j = 0; j < nCols && numSlide < Focalize.numSlides; j++) {
+        // Cloning is necessary, as we will be fitting the texts etc. and we
+        // do not want those changes to show on the "real" slides               
+        $divs[i][j].append(Focalize.$slideDivs[numSlide].clone());        
+        $thumbContainer.append($divs[i][j]);                
+        numSlide += 1;
+      }
+    }
+    
+    return $thumbContainer;
+  };
+ 
+  
+  /**
+   * 
+   * @param {Number} nCols
+   * @param {Number} nRows
+   * @param {Object} colGapSize In percentage
+   * @param {Object} rowGapSize In percentage
+   * @param {Object} colWeights
+   * @param {Object} rowWeights
+   * @param zIndex
+   */
+  Focalize.createDivGrid = function(nCols, nRows, colGapSize, rowGapSize,
+                                    colWeights, rowWeights, zIndex) {
+    var i,j;
+    var currDivHeight, currDivWidth;
+    var totalRelativeHeight = 0;
+    var totalRelativeWidth = 0;    
+    var nColGaps = nCols - 1;
+    var nRowGaps = nRows - 1;
+    var $divs = [];
+    var currDivTop = 0;
+    var currDivLeft = 0;
+    
+    //var totalPercentHeight = 100 - (rowGapSize * nRowGaps);
+    // To keep rows which are not to squeezed, I will make the maximum
+    // height higher than 100%
+    var totalPercentHeight = (nRows * 30) - (rowGapSize * nRowGaps);
+    var totalPercentWidth = 100 - (colGapSize * nColGaps);
+    
+    
+    for (i = 0; i < nRows; i++) {
+        totalRelativeHeight += rowWeights[i];
+    }
+    
+    for (i = 0; i < nCols; i++) {
+        totalRelativeWidth += colWeights[i];
+    }  
+    
+    for (i = 0; i < nRows; i++) {      
+      $divs[i] = [];
+      currDivLeft = 0;
+      for (j = 0; j < nCols; j++) {
+        currDivHeight = (rowWeights[i] / totalRelativeHeight) * totalPercentHeight;
+        currDivWidth = (colWeights[j] / totalRelativeWidth) * totalPercentWidth;
+        $divs[i][j] = $("<div></div>")
+          .css({
+            position: "absolute",
+            top: currDivTop+"%",   
+            left: currDivLeft+"%",     
+            width: currDivWidth+"%",                   
+            height: currDivHeight+"%",
+            overflow: "hidden",
+            "z-index": zIndex,
+            background: "transparent",
+          }); 
+        currDivLeft = currDivLeft + currDivWidth + colGapSize;        
+      }
+      currDivTop = currDivTop + currDivHeight + rowGapSize;
+    }    
+    return $divs;     
+  };
+    
+  
+  
   return Focalize;
 };
 
