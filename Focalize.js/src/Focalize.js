@@ -778,8 +778,9 @@ function FocalizeModule() {
     
     var i;
     var isSeqChange = false;
-    var prevSlideInSeq = false;
-    var nextSlideInSeq = false;
+    var leapForwardInSeq = false;
+    var leapBackwardsInSeq = false;
+    var jumpSlides = 0;
    
     
     var newSeqIdx = Focalize.seqOfSlide(newSlideIdx);       
@@ -787,10 +788,12 @@ function FocalizeModule() {
     if (newSeqIdx !== Focalize.currSeqIdx) {    
       isSeqChange = true;
     } else {
-      if (newSlideIdx === (Focalize.currSlideIdx + 1)) {
-        nextSlideInSeq = true;
-      } else if (newSlideIdx === (Focalize.currSlideIdx - 1)) {
-        prevSlideInSeq = true;
+      if (newSlideIdx > (Focalize.currSlideIdx)) {
+        leapForwardInSeq = true;
+        jumpSlides = newSlideIdx - Focalize.currSlideIdx;
+      } else if (newSlideIdx < (Focalize.currSlideIdx)) {
+        leapBackwardsInSeq = true;
+        jumpSlides = Focalize.currSlideIdx - newSlideIdx;
       }
     }
     
@@ -878,12 +881,11 @@ function FocalizeModule() {
       // In first slide...
       addSlideToDisplay(seqConfigData.name, 
                         slideConfigData.name); 
-    } else { 
-            
-      if (nextSlideInSeq) {
+    } else {             
+      if (leapForwardInSeq) {          
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
-                                Math.floor($("html").width()*
+                                Math.floor($("html").width()*jumpSlides*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
         }  
@@ -891,11 +893,11 @@ function FocalizeModule() {
                
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", 
-                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});        
-      } else if (prevSlideInSeq) {       
+                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
+      } else if (leapBackwardsInSeq) {
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
-                                Math.floor($("html").width()*
+                                Math.floor($("html").width()*jumpSlides*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
         }
@@ -904,7 +906,6 @@ function FocalizeModule() {
         $slideToRemove.css({position : "absolute", width : "100%"})
         .transition({ x: "+="+$("html").width()+"px" }, "slow", 
           function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
-      } else { // IS A NEW SEQUENCE        
       }
       
     }
@@ -1067,7 +1068,8 @@ function FocalizeModule() {
     // My first approach was creating the thumb container once, here, and 
     // making it visible on request. I have not been able to make
     // it work like that (the text fitting fails after the second time it
-    // is shown), so for now I re-create it on demand...
+    // is shown), so for now I re-create it on demand. It does not seem
+    // to have a big effect on performance or memory...
       // Create thumbContainer now that the slides have been loaded
       //Focalize.createThumbContainer(3);
       //Focalize.$thumbContainer.hide();
@@ -1129,15 +1131,35 @@ function FocalizeModule() {
       });     
     
     // Create a grid of divs to show the thumbnails of each slide
-    var $divs = Focalize.createDivGrid(nCols, nRows, 0.1, 0.1, colWeights, rowWeights, zIndex);    
-         
+    var $divs = Focalize.createDivGrid(nCols, nRows, 0.5, 0.5, colWeights, rowWeights, zIndex);    
+       
+    /*
+     * I need this function out of the fors. If I define the internal function in the
+     * bind to the click event, as usual, first of all I am creating too many
+     * functions and, even worse, it would not work as expected as those
+     * functions would capture the variable numSlide and not its current
+     * value (closure) as I would need.
+     */     
+    var slideOpener = function(n) {
+      return function() {
+        Focalize.hideThumbs();
+        Focalize.displaySlide(n);
+      };  
+    };
+    
     
     numSlide = 0;
     for (i = 0; i < nRows; i++) {
       for (j = 0; j < nCols && numSlide < Focalize.numSlides; j++) {
+        var slideThumbClass = "slideThumb";
+        if (Focalize.currSlideIdx === numSlide) {
+          slideThumbClass += " yellow-frame";
+        }
+        
         // Cloning is a precaution, as we will be fitting the texts etc. and we
         // do not want those changes to show on the "master" slides                       
-        $divs[i][j].append(Focalize.$slideDivs[numSlide].clone().addClass("slideThumb"));        
+        $divs[i][j].append(Focalize.$slideDivs[numSlide].clone().addClass(slideThumbClass));
+        $divs[i][j].bind("click", slideOpener(numSlide));        
         Focalize.$thumbContainer.append($divs[i][j]);                
         numSlide += 1;
       }
@@ -1195,7 +1217,7 @@ function FocalizeModule() {
             left: currDivLeft+"%",     
             width: currDivWidth+"%",                   
             height: currDivHeight+"%",
-            overflow: "hidden",
+            overflow: "visible",
             "z-index": zIndex,
             background: "transparent",
           }); 
