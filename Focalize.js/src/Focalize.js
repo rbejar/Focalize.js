@@ -21,10 +21,29 @@ function FocalizeModule() {
   
   //var privateVariable = 1;
 
-  //function privateMethod() {
-    // ...
-  //}
+  // Simple assertion. Probably it should not be here. I have not
+  // found a simple, up-to-date, not-tied-to-a-testing-framework library
+  // for contract based design that I like. This should be enough for now.
+  function assert(exp, msg) {    
+    var message = msg || "Assertion failed";
+    if (!exp) {              
+     // console.assert does not work in Firefox
+     // As the Error will be reported as thrown from here, at least I
+     // will output the trace so I can find out from where was this called
+     console.trace();
+     throw new Error(message);     
+    } 
+  };
   
+  // Valid types: "number", "string", "object"
+  function assertIsType(value, type, msg) {
+    var valueType = typeof value;    
+    if (valueType !== type) {
+     // this makes sure we have a failed assertion
+     assert(false, msg);
+    }
+  };
+    
   Focalize.ValidStates = {onPresentation : "ON PRESENTATION", 
                           onThumbnails : "ON THUMBNAILS"};
 
@@ -631,8 +650,7 @@ function FocalizeModule() {
   Focalize.adjustSlideContents = function($slideToAdjust) {
     // 500 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
-    textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 3, maxFontSize: 500});
-    console.log("number of h1: "+ $slideToAdjust.find("h1").length);    
+    textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 3, maxFontSize: 500});  
     textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, minFontSize: 3, maxFontSize: 500});
     textFit($slideToAdjust.find("figCaption"),{alignVert: true, minFontSize: 3, maxFontSize: 500});
     
@@ -916,7 +934,7 @@ function FocalizeModule() {
   };
   
   Focalize.keyPresentationHandler = function(event) {        
-    console.log(event.which);
+    // console.log(event.which);
     // which is normalized among browsers, keyCode is not
 
     // The idea behind the detachEventHandlers() is to prevent a 
@@ -1083,12 +1101,11 @@ function FocalizeModule() {
   
   Focalize.showThumbs = function() {
     Focalize.status = Focalize.ValidStates.onThumbnails;
-    Focalize.createThumbContainer(3); 
+    Focalize.createThumbContainer(4); 
     $(".focalize-presentation").after(Focalize.$thumbContainer);   
     // We must delay the adjust Contents (i.e. text fitting) until
     // we actually have our thumbnails "on screen"
-    Focalize.$thumbContainer.find(".slideThumb").each(function() {
-     console.log("ADJUST");
+    Focalize.$thumbContainer.find(".slideThumb").each(function() {     
      Focalize.adjustSlideContents($(this));
     });     
   };
@@ -1105,18 +1122,8 @@ function FocalizeModule() {
     
     var i,j, numSlide;
     var $titleDiv, $contentDiv;
-    var colWeights = [];
-    var rowWeights = [];
     var zIndex = 30000;
     var nRows = Math.ceil(Focalize.numSlides / nCols);    
-    
-    for (i = 0; i < nCols; i++) {
-      colWeights[i] = 1;
-    }
-    
-    for (i = 0; i < nRows; i++) {
-      rowWeights[i] = 1;
-    }
     
     Focalize.$thumbContainer = $("<div></div>")
       .css({
@@ -1131,7 +1138,7 @@ function FocalizeModule() {
       });     
     
     // Create a grid of divs to show the thumbnails of each slide
-    var $divs = Focalize.createDivGrid(nCols, nRows, 0.5, 0.5, colWeights, rowWeights, zIndex);    
+    var $divs = Focalize.createDivGrid(nCols, nRows, 0.5, 0.5, zIndex);    
        
     /*
      * I need this function out of the fors. If I define the internal function in the
@@ -1173,12 +1180,26 @@ function FocalizeModule() {
    * @param {Number} nRows
    * @param {Object} colGapSize In percentage
    * @param {Object} rowGapSize In percentage
-   * @param {Object} colWeights
-   * @param {Object} rowWeights
+   * @param {Object} colWeights (optional; all the same weight if not provided)
+   * @param {Object} rowWeights (optional; all the same weight if not provided)
    * @param zIndex
    */
-  Focalize.createDivGrid = function(nCols, nRows, colGapSize, rowGapSize,
-                                    colWeights, rowWeights, zIndex) {
+  Focalize.createDivGrid = function(nCols, nRows, colGapSize, rowGapSize, zIndex,
+                                    colWeights, rowWeights) {
+    
+    assert(nCols > 0, "nCols must be provided and greater than 0");                                  
+    assert(nRows > 0, "nRows must be provided and greater than 0");
+    assert(colGapSize >= 0 && colGapSize <= 100, "colGapSize must be provided and [0..100]");
+    assert(rowGapSize >= 0 && rowGapSize <= 100, "rowGapSize must be provided and [0..100]");
+    assertIsType(zIndex, "number", "zIndex must be provided and be a number");
+    if (colWeights) {
+      assert(colWeights, colWeights.length === nCols, "colWeights must be an Array of exactly nCols");
+    }
+    if (rowWeights) {
+      assert(rowWeights, rowWeights.length === nRows, "rowWeights must be an Array of exactly nRows");
+    }
+                                      
+                                      
     var i,j;
     var currDivHeight, currDivWidth;
     var totalRelativeHeight = 0;
@@ -1188,6 +1209,20 @@ function FocalizeModule() {
     var $divs = [];
     var currDivTop = 0;
     var currDivLeft = 0;
+    
+    if (!colWeights) {
+      colWeights = [];
+      for (i = 0; i < nCols; i++) {
+        colWeights[i] = 1;
+      }
+    }
+    
+    if (!rowWeights) {
+      rowWeights = [];
+      for (i = 0; i < nRows; i++) {
+        rowWeights[i] = 1;
+      }    
+    }
     
     //var totalPercentHeight = 100 - (rowGapSize * nRowGaps);
     // To keep rows which are not to squeezed, I will make the maximum
