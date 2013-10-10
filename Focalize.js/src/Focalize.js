@@ -196,17 +196,12 @@ function FocalizeModule() {
     // click event does not get right click in Chromium; mousedown gets left
     // and right clicks properly in both Firefox and Chromium
     $(document).mousedown(Focalize.mousePresentationHandler);
-    // Swipes are not working yet...
-    /*$(document).hammer().on("swipeleft", function(ev) {
-      ev.gesture.preventDefault(); // Prevent standard scrolling behaviour
-      Focalize.nextSlide();
-      ev.stopPropagation();
-    });
-    $(document).hammer().on("swiperight", function(ev) {
-      ev.gesture.preventDefault(); // Prevent standard scrolling behaviour
-      Focalize.previouSlide();
-      ev.stopPropagation();
-    });*/  
+    
+    $(document).hammer().on("swipe", Focalize.touchPresentationHandler);
+    $(document).hammer().on("pinchin", Focalize.touchPresentationHandler);
+    $(document).hammer().on("pinchout", Focalize.touchPresentationHandler);
+    
+    
   };
   
   /**
@@ -217,7 +212,11 @@ function FocalizeModule() {
     $(document).unbind("keyup");
     $(document).unbind("mousedown");
     
-    // Detach hammer gestures...
+    $(document).hammer().off("swipe", Focalize.touchPresentationHandler);
+    $(document).hammer().off("pinchin", Focalize.touchPresentationHandler);
+    $(document).hammer().off("pinchout", Focalize.touchPresentationHandler);
+   
+     
   };
   
   /**
@@ -1014,6 +1013,52 @@ function FocalizeModule() {
         // Nothing. I have found it important not to interfere at all 
         // with clicks I do not use.
     }   
+  };
+  
+  Focalize.touchPresentationHandler = function(ev) {    
+    if (ev.type === "swipe") {
+      if (ev.gesture.direction === "left") {
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {   
+          Focalize.detachEventHandlers();
+          Focalize.nextSlide();
+          // I don't really know if I need all these
+          ev.preventDefault();
+          ev.stopPropagation();
+          ev.gesture.stopPropagation();
+          ev.gesture.preventDefault();
+          ev.gesture.stopDetect();
+        }
+      } else if (ev.gesture.direction === "right") {
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {
+          Focalize.detachEventHandlers();
+          Focalize.previousSlide();
+          // I don't really know if I need all these
+          ev.preventDefault();
+          ev.stopPropagation();
+          ev.gesture.stopPropagation();
+          ev.gesture.preventDefault();
+          ev.gesture.stopDetect() ;
+        }
+      }      
+    } else if (ev.type === "pinchin") {
+      if (Focalize.status === Focalize.ValidStates.onPresentation) {
+        Focalize.showThumbs();
+        event.preventDefault();
+        event.stopPropagation();
+        ev.gesture.stopPropagation();
+        ev.gesture.preventDefault();
+        ev.gesture.stopDetect() ;
+      } 
+    } else if (ev.type === "pinchout") {
+      if (Focalize.status === Focalize.ValidStates.onThumbnails) {
+        Focalize.hideThumbs();
+        event.preventDefault();
+        event.stopPropagation();
+        ev.gesture.stopPropagation();
+        ev.gesture.preventDefault();
+        ev.gesture.stopDetect() ;
+      }
+    }      
   };
   
   Focalize.nextSlide = function() {

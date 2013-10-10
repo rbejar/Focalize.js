@@ -51,5 +51,8 @@ MIT License
 <http://darsa.in/motio/>
 Copyright (C) 2013 <http://darsa.in>
 MIT License
+### Hammer.js
+<http://eightmedia.github.io/hammer.js/>
+Copyright (C) 2013 by Jorik Tangelder (Eight Media)
 ### Images for the simple city style
 All of them are public domain, downloaded from <http://www.openclipart.org>. Of course I have made a number of minor, and a few not-so-minor, changes on them. If you created some of these images and want your name here, contact me.
