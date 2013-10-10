@@ -21,9 +21,31 @@ function FocalizeModule() {
   
   //var privateVariable = 1;
 
-  //function privateMethod() {
-    // ...
-  //}
+  // Simple assertion. Probably it should not be here. I have not
+  // found a simple, up-to-date, not-tied-to-a-testing-framework library
+  // for contract based design that I like. This should be enough for now.
+  function assert(exp, msg) {    
+    var message = msg || "Assertion failed";
+    if (!exp) {              
+     // console.assert does not work in Firefox
+     // As the Error will be reported as thrown from here, at least I
+     // will output the trace so I can find out from where was this called
+     console.trace();
+     throw new Error(message);     
+    } 
+  };
+  
+  // Valid types: "number", "string", "object"
+  function assertIsType(value, type, msg) {
+    var valueType = typeof value;    
+    if (valueType !== type) {
+     // this makes sure we have a failed assertion
+     assert(false, msg);
+    }
+  };
+    
+  Focalize.ValidStates = {onPresentation : "ON PRESENTATION", 
+                          onThumbnails : "ON THUMBNAILS"};
 
   Focalize.currSlideIdx = 0;
   Focalize.currSeqIdx = 0;
@@ -38,6 +60,8 @@ function FocalizeModule() {
   Focalize.slideNames = [];
   Focalize.styleConfiguration = {};
   Focalize.motios = [];  
+  Focalize.$thumbContainer = null;
+  Focalize.status = Focalize.ValidStates.onPresentation;
   
   /**
    * Used to start the presentation from a style JSON file. As this
@@ -147,44 +171,19 @@ function FocalizeModule() {
   };
   
   Focalize.fullScreenStart = function () {   
-    $(document).ready(function(){
-      // Go to full screen
-      $(document).fullScreen(true);
-      $(document).bind("fullscreenchange", function() {
-        if ($(document).fullScreen()) {       
-          $('.remove-before-start').remove();         
-          
-          // CREO QUE SIMPLEMENTE RETRASANDO LA LLAMADA A START HASTA
-          // QUE EL BOTTON HA SIDO EFECTIVAMENTE ELIMINADO HARÁ QUE
-          // SE COJA EL TAMAÑO FULL SCREEN SIN MÁRGENES. PARECE
-          // QUE SI NO, EL NAVEGADOR ESTÁ TODAVÍA "RECOLOCÁNDOSE" Y
-          // PUEDEN SALIR MÁRGENES INDESEADOS...
-          
-            // CON ESTA PAUSA DE 2 SEGUNDOS A PIÑÓN VA BIEN, PERO SERÍA MEJOR
-          // QUE ESTO FUERA POR EVENTO...
-          setTimeout(Focalize.startPresentation, 2000);
-        } else {
-          // Si salimos de full screen, de momento no hago nada
-            // Debería poner la presentación en un estado "continuable" o bien
-          // "resetearla" y explicar al usuario lo que puede hacer
-        }    
-      });  
+    $(document).ready(function() {
+      $("html").bind("fscreenopen", function() {       
+        $('.remove-before-start').remove();         
+        Focalize.startPresentation();     
+      });    
+      $("html").fullscreen();
     });
-  };
+  }; 
   
   Focalize.notFullScreenStart = function () {   
     $(document).ready(function(){
       $('.remove-before-start').remove();         
-          
-          // CREO QUE SIMPLEMENTE RETRASANDO LA LLAMADA A START HASTA
-          // QUE EL BOTTON HA SIDO EFECTIVAMENTE ELIMINADO HARÁ QUE
-          // SE COJA EL TAMAÑO FULL SCREEN SIN MÁRGENES. PARECE
-          // QUE SI NO, EL NAVEGADOR ESTÁ TODAVÍA "RECOLOCÁNDOSE" Y
-          // PUEDEN SALIR MÁRGENES INDESEADOS...
-          
-            // CON ESTA PAUSA DE 2 SEGUNDOS A PIÑÓN VA BIEN, PERO SERÍA MEJOR
-          // QUE ESTO FUERA POR EVENTO...
-          setTimeout(Focalize.startPresentation, 2000); 
+      Focalize.startPresentation(); 
     });
   };
   
@@ -197,17 +196,12 @@ function FocalizeModule() {
     // click event does not get right click in Chromium; mousedown gets left
     // and right clicks properly in both Firefox and Chromium
     $(document).mousedown(Focalize.mousePresentationHandler);
-    // Swipes are not working yet...
-    /*$(document).hammer().on("swipeleft", function(ev) {
-      ev.gesture.preventDefault(); // Prevent standard scrolling behaviour
-      Focalize.nextSlide();
-      ev.stopPropagation();
-    });
-    $(document).hammer().on("swiperight", function(ev) {
-      ev.gesture.preventDefault(); // Prevent standard scrolling behaviour
-      Focalize.previouSlide();
-      ev.stopPropagation();
-    });*/  
+    
+    $(document).hammer().on("swipe", Focalize.touchPresentationHandler);
+    $(document).hammer().on("pinchin", Focalize.touchPresentationHandler);
+    $(document).hammer().on("pinchout", Focalize.touchPresentationHandler);
+    
+    
   };
   
   /**
@@ -218,7 +212,11 @@ function FocalizeModule() {
     $(document).unbind("keyup");
     $(document).unbind("mousedown");
     
-    // Detach hammer gestures...
+    $(document).hammer().off("swipe", Focalize.touchPresentationHandler);
+    $(document).hammer().off("pinchin", Focalize.touchPresentationHandler);
+    $(document).hammer().off("pinchout", Focalize.touchPresentationHandler);
+   
+     
   };
   
   /**
@@ -288,14 +286,18 @@ function FocalizeModule() {
    * be an empty div if the slide has no title (i.e. if its
    * titleLayerCSSClass is an empty string).
    */
-  Focalize.$createTitleDiv = function($titleContents, slideIdx) {
+  Focalize.$createTitleDiv = function(slideIdx) {
     var $titleDiv;
-    var $titleTextAreaDiv;
+    var $titleTextAreaDiv;    
+    var $titleContents;
+    
     if (Focalize.slideConfigData(slideIdx).titleLayerCSSClass !== "") {
       $titleDiv = $("<div></div>")
                     .addClass(Focalize.slideConfigData(slideIdx).titleLayerCSSClass);       
       $titleTextAreaDiv = $("<div></div>")
-                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);    
+                            .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);
+      $titleContents = Focalize.$slides[slideIdx].find("h1")
+                       .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);    
       $titleTextAreaDiv.append($titleContents);
       $titleDiv.append($titleTextAreaDiv);     
     } else { // No title
@@ -639,24 +641,24 @@ function FocalizeModule() {
   };
   
   /**
-   * Fit texts, images etc. to their calculated divs.
-   * Must be called after the $slideToDisplay has been appended
+   * Fit texts, images etc. in a **single** slide to their calculated divs.
+   * Must be called after the $slideToAdjust has been appended
    * to its final div, so the sizes are right and the
    * fitting may work properly
    */
-  Focalize.adjustContents = function($slideToDisplay) {
-    // 200 as maxFontSize means: make it as big as it gets
+  Focalize.adjustSlideContents = function($slideToAdjust) {
+    // 500 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
-    textFit($slideToDisplay.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 200});
-    textFit($slideToDisplay.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 200});
-    textFit($slideToDisplay.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 200});
+    textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 3, maxFontSize: 500});  
+    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, minFontSize: 3, maxFontSize: 500});
+    textFit($slideToAdjust.find("figCaption"),{alignVert: true, minFontSize: 3, maxFontSize: 500});
     
     // Tras aplicar el textFit a los elementos, ver cual tiene
     // el font-size menor en cada categoría, y aplicárselo a todos, para que todos
     // tengan el mismo tamaño dentro de una misma categoría      
     var minimumSize = function (elementType, currentMin) {
-      var i;
-      var $textFitSpan = $(elementType + " > .textFitted");
+      var i;      
+      var $textFitSpan = $slideToAdjust.find(elementType + " > .textFitted");
       var min = currentMin;
       var currSize;
       for (i = 0; i < $textFitSpan.length; i++) {
@@ -793,8 +795,9 @@ function FocalizeModule() {
     
     var i;
     var isSeqChange = false;
-    var prevSlideInSeq = false;
-    var nextSlideInSeq = false;
+    var leapForwardInSeq = false;
+    var leapBackwardsInSeq = false;
+    var jumpSlides = 0;
    
     
     var newSeqIdx = Focalize.seqOfSlide(newSlideIdx);       
@@ -802,10 +805,12 @@ function FocalizeModule() {
     if (newSeqIdx !== Focalize.currSeqIdx) {    
       isSeqChange = true;
     } else {
-      if (newSlideIdx === (Focalize.currSlideIdx + 1)) {
-        nextSlideInSeq = true;
-      } else if (newSlideIdx === (Focalize.currSlideIdx - 1)) {
-        prevSlideInSeq = true;
+      if (newSlideIdx > (Focalize.currSlideIdx)) {
+        leapForwardInSeq = true;
+        jumpSlides = newSlideIdx - Focalize.currSlideIdx;
+      } else if (newSlideIdx < (Focalize.currSlideIdx)) {
+        leapBackwardsInSeq = true;
+        jumpSlides = Focalize.currSlideIdx - newSlideIdx;
       }
     }
     
@@ -849,7 +854,7 @@ function FocalizeModule() {
       Focalize.preInTransition($slideToDisplay, seqName, slideName);      
       
       $(".seqToDisplay").append($slideToDisplay);  
-      Focalize.adjustContents($slideToDisplay);
+      Focalize.adjustSlideContents($slideToDisplay);
       
       //var $foregroundGround = $("<div></div>").css({position:"fixed",bottom: 0, 
       //                                              left:0, right:0, width:"100%", height:"5px"});
@@ -893,12 +898,11 @@ function FocalizeModule() {
       // In first slide...
       addSlideToDisplay(seqConfigData.name, 
                         slideConfigData.name); 
-    } else { 
-            
-      if (nextSlideInSeq) {
+    } else {             
+      if (leapForwardInSeq) {          
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
-                                Math.floor($("html").width()*
+                                Math.floor($("html").width()*jumpSlides*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
         }  
@@ -906,11 +910,11 @@ function FocalizeModule() {
                
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", 
-                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});        
-      } else if (prevSlideInSeq) {       
+                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
+      } else if (leapBackwardsInSeq) {
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
-                                Math.floor($("html").width()*
+                                Math.floor($("html").width()*jumpSlides*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
         }
@@ -919,7 +923,6 @@ function FocalizeModule() {
         $slideToRemove.css({position : "absolute", width : "100%"})
         .transition({ x: "+="+$("html").width()+"px" }, "slow", 
           function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
-      } else { // IS A NEW SEQUENCE        
       }
       
     }
@@ -943,21 +946,38 @@ function FocalizeModule() {
       case 78: // n
       case 34: // page down
       case 13: // return
-      case 32: // space        
-        Focalize.detachEventHandlers();
-        Focalize.nextSlide();
-        event.preventDefault();
-        event.stopPropagation();
+      case 32: // space 
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {       
+          Focalize.detachEventHandlers();
+          Focalize.nextSlide();
+          event.preventDefault();
+          event.stopPropagation();
+        }        
         break;
       case 37: // left arrow
       case 38: // up arrow
       case 80: // p
       case 33 : // page up
       case 8: // backspace
-        Focalize.detachEventHandlers();
-        Focalize.previousSlide();
-        event.preventDefault();
-        event.stopPropagation();
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {       
+          Focalize.detachEventHandlers();
+          Focalize.previousSlide();
+          event.preventDefault();
+          event.stopPropagation();
+        }                       
+        break;
+      //case 112: // F1 - Chromium does not allow to capture this key (it is its help)
+      //case 9: // Tab - Firefox behaves "weird" if I use this key... ???
+      case 84: // t
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {
+          Focalize.showThumbs();
+          event.preventDefault();
+          event.stopPropagation();
+        } else if (Focalize.status === Focalize.ValidStates.onThumbnails) {
+          Focalize.hideThumbs();
+          event.preventDefault();
+          event.stopPropagation();
+        }
         break;
       default:
         // Nothing. I have found it important not to interfere at all 
@@ -974,21 +994,71 @@ function FocalizeModule() {
     
     switch (event.which) {
       case 1: // left button
-        Focalize.detachEventHandlers();
-        Focalize.nextSlide();
-        event.preventDefault();
-        event.stopPropagation();
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {           
+          Focalize.detachEventHandlers();
+          Focalize.nextSlide();
+          event.preventDefault();
+          event.stopPropagation();
+        }
         break;
       case 3: // right button
-        Focalize.detachEventHandlers();
-        Focalize.previousSlide();
-        event.preventDefault();
-        event.stopPropagation();
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {   
+          Focalize.detachEventHandlers();
+          Focalize.previousSlide();
+          event.preventDefault();
+          event.stopPropagation();
+        }
         break;
       default:
         // Nothing. I have found it important not to interfere at all 
         // with clicks I do not use.
     }   
+  };
+  
+  Focalize.touchPresentationHandler = function(ev) {    
+    if (ev.type === "swipe") {
+      if (ev.gesture.direction === "left") {
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {   
+          Focalize.detachEventHandlers();
+          Focalize.nextSlide();
+          // I don't really know if I need all these
+          ev.preventDefault();
+          ev.stopPropagation();
+          ev.gesture.stopPropagation();
+          ev.gesture.preventDefault();
+          ev.gesture.stopDetect();
+        }
+      } else if (ev.gesture.direction === "right") {
+        if (Focalize.status === Focalize.ValidStates.onPresentation) {
+          Focalize.detachEventHandlers();
+          Focalize.previousSlide();
+          // I don't really know if I need all these
+          ev.preventDefault();
+          ev.stopPropagation();
+          ev.gesture.stopPropagation();
+          ev.gesture.preventDefault();
+          ev.gesture.stopDetect() ;
+        }
+      }      
+    } else if (ev.type === "pinchin") {
+      if (Focalize.status === Focalize.ValidStates.onPresentation) {
+        Focalize.showThumbs();
+        event.preventDefault();
+        event.stopPropagation();
+        ev.gesture.stopPropagation();
+        ev.gesture.preventDefault();
+        ev.gesture.stopDetect() ;
+      } 
+    } else if (ev.type === "pinchout") {
+      if (Focalize.status === Focalize.ValidStates.onThumbnails) {
+        Focalize.hideThumbs();
+        event.preventDefault();
+        event.stopPropagation();
+        ev.gesture.stopPropagation();
+        ev.gesture.preventDefault();
+        ev.gesture.stopDetect() ;
+      }
+    }      
   };
   
   Focalize.nextSlide = function() {
@@ -1031,10 +1101,8 @@ function FocalizeModule() {
       for (j = 0; j < $currSeqSlides.size(); j++) {
         Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
         Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
-        
-        var $titleH1 = Focalize.$slides[Focalize.numSlides].find("h1")
-                        .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);              
-        var $titleDiv = Focalize.$createTitleDiv($titleH1, Focalize.numSlides);        
+                              
+        var $titleDiv = Focalize.$createTitleDiv(Focalize.numSlides);        
         var $slideChildren = $titleDiv;
         
         //Focalize.$slides[Focalize.numSlides].find("ul,li")
@@ -1044,16 +1112,10 @@ function FocalizeModule() {
         // children, only the ul itself seems to be selected. That is the reason why
         // this clone is not need with elements without children, like the H1
         // I DO NOT UNDERSTAND THIS VERY WELL...
-        //var $contentUL = Focalize.$slides[Focalize.numSlides].find("ul").eq(0).clone();
+        //var $contentUL = Focalize.$slides[Focalize.numSlides].find("ul").eq(0).clone();        
         
-        
-        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);        
-        
-        
+        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);                
         $slideChildren = $slideChildren.add($contentDiv);
-        
-        //var $slideChildren23 = Focalize.$slides[Focalize.numSlides].find("h2,h3").addClass("simple-city-seq1-slide1");        
-
         Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
         Focalize.numSlides += 1;
       }     
@@ -1065,14 +1127,189 @@ function FocalizeModule() {
     });
     
     Focalize.attachEventHandlers();
+    
+    // My first approach was creating the thumb container once, here, and 
+    // making it visible on request. I have not been able to make
+    // it work like that (the text fitting fails after the second time it
+    // is shown), so for now I re-create it on demand. It does not seem
+    // to have a big effect on performance or memory...
+      // Create thumbContainer now that the slides have been loaded
+      //Focalize.createThumbContainer(3);
+      //Focalize.$thumbContainer.hide();
+      //$(".focalize-presentation").after(Focalize.$thumbContainer);
+
  
     
     // Display first slide to start the "presentation loop"
-    Focalize.displaySlide(0);
-    
-
-
+    Focalize.displaySlide(0);    
   };
+  
+  Focalize.showThumbs = function() {
+    Focalize.status = Focalize.ValidStates.onThumbnails;
+    Focalize.createThumbContainer(4); 
+    $(".focalize-presentation").after(Focalize.$thumbContainer);   
+    // We must delay the adjust Contents (i.e. text fitting) until
+    // we actually have our thumbnails "on screen"
+    Focalize.$thumbContainer.find(".slideThumb").each(function() {     
+     Focalize.adjustSlideContents($(this));
+    });     
+  };
+  
+  Focalize.hideThumbs = function() {
+    Focalize.status = Focalize.ValidStates.onPresentation;    
+    Focalize.$thumbContainer.remove();
+  };
+  
+  Focalize.createThumbContainer = function(nCols) {
+    if (!nCols) {
+      var nCols = 4;
+    }
+    
+    var i,j, numSlide;
+    var $titleDiv, $contentDiv;
+    var zIndex = 30000;
+    var nRows = Math.ceil(Focalize.numSlides / nCols);    
+    
+    Focalize.$thumbContainer = $("<div></div>")
+      .css({
+        position: "fixed",
+        top: 0,   
+        left: 0,     
+        right: 0,                   
+        bottom: 0,
+        overflow: "auto",
+        "z-index": 30000,
+        background: "black",  
+      });     
+    
+    // Create a grid of divs to show the thumbnails of each slide
+    var $divs = Focalize.createDivGrid(nCols, nRows, 0.5, 0.5, zIndex);    
+       
+    /*
+     * I need this function out of the fors. If I define the internal function in the
+     * bind to the click event, as usual, first of all I am creating too many
+     * functions and, even worse, it would not work as expected as those
+     * functions would capture the variable numSlide and not its current
+     * value (closure) as I would need.
+     */     
+    var slideOpener = function(n) {
+      return function() {
+        Focalize.hideThumbs();
+        Focalize.displaySlide(n);
+      };  
+    };
+    
+    
+    numSlide = 0;
+    for (i = 0; i < nRows; i++) {
+      for (j = 0; j < nCols && numSlide < Focalize.numSlides; j++) {
+        var slideThumbClass = "slideThumb";
+        if (Focalize.currSlideIdx === numSlide) {
+          slideThumbClass += " yellow-frame";
+        }
+        
+        // Cloning is a precaution, as we will be fitting the texts etc. and we
+        // do not want those changes to show on the "master" slides                       
+        $divs[i][j].append(Focalize.$slideDivs[numSlide].clone().addClass(slideThumbClass));
+        $divs[i][j].bind("click", slideOpener(numSlide));        
+        Focalize.$thumbContainer.append($divs[i][j]);                
+        numSlide += 1;
+      }
+    }
+  };
+ 
+  
+  /**
+   * 
+   * @param {Number} nCols
+   * @param {Number} nRows
+   * @param {Object} colGapSize In percentage
+   * @param {Object} rowGapSize In percentage
+   * @param {Object} colWeights (optional; all the same weight if not provided)
+   * @param {Object} rowWeights (optional; all the same weight if not provided)
+   * @param zIndex
+   */
+  Focalize.createDivGrid = function(nCols, nRows, colGapSize, rowGapSize, zIndex,
+                                    colWeights, rowWeights) {
+    
+    assert(nCols > 0, "nCols must be provided and greater than 0");                                  
+    assert(nRows > 0, "nRows must be provided and greater than 0");
+    assert(colGapSize >= 0 && colGapSize <= 100, "colGapSize must be provided and [0..100]");
+    assert(rowGapSize >= 0 && rowGapSize <= 100, "rowGapSize must be provided and [0..100]");
+    assertIsType(zIndex, "number", "zIndex must be provided and be a number");
+    if (colWeights) {
+      assert(colWeights, colWeights.length === nCols, "colWeights must be an Array of exactly nCols");
+    }
+    if (rowWeights) {
+      assert(rowWeights, rowWeights.length === nRows, "rowWeights must be an Array of exactly nRows");
+    }
+                                      
+                                      
+    var i,j;
+    var currDivHeight, currDivWidth;
+    var totalRelativeHeight = 0;
+    var totalRelativeWidth = 0;    
+    var nColGaps = nCols - 1;
+    var nRowGaps = nRows - 1;
+    var $divs = [];
+    var currDivTop = 0;
+    var currDivLeft = 0;
+    
+    if (!colWeights) {
+      colWeights = [];
+      for (i = 0; i < nCols; i++) {
+        colWeights[i] = 1;
+      }
+    }
+    
+    if (!rowWeights) {
+      rowWeights = [];
+      for (i = 0; i < nRows; i++) {
+        rowWeights[i] = 1;
+      }    
+    }
+    
+    //var totalPercentHeight = 100 - (rowGapSize * nRowGaps);
+    // To keep rows which are not to squeezed, I will make the maximum
+    // height higher than 100%
+    var totalPercentHeight = (nRows * 30) - (rowGapSize * nRowGaps);
+    var totalPercentWidth = 100 - (colGapSize * nColGaps);
+    
+    
+    for (i = 0; i < nRows; i++) {
+        totalRelativeHeight += rowWeights[i];
+    }
+    
+    for (i = 0; i < nCols; i++) {
+        totalRelativeWidth += colWeights[i];
+    }  
+    
+    for (i = 0; i < nRows; i++) {      
+      $divs[i] = [];
+      currDivLeft = 0;
+      for (j = 0; j < nCols; j++) {
+        currDivHeight = (rowWeights[i] / totalRelativeHeight) * totalPercentHeight;
+        currDivWidth = (colWeights[j] / totalRelativeWidth) * totalPercentWidth;
+        $divs[i][j] = $("<div></div>")
+          .css({
+            position: "absolute",
+            top: currDivTop+"%",   
+            left: currDivLeft+"%",     
+            width: currDivWidth+"%",                   
+            height: currDivHeight+"%",
+            overflow: "visible",
+            "z-index": zIndex,
+            background: "transparent",
+          }); 
+        currDivLeft = currDivLeft + currDivWidth + colGapSize;        
+      }
+      currDivTop = currDivTop + currDivHeight + rowGapSize;
+    }    
+    return $divs;     
+  };
+    
+  
+  
   return Focalize;
 };
 

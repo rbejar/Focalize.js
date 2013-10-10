@@ -66,9 +66,14 @@ div.background-houses {
 }
 
 
+/* It is important that the foreground elements are absolutely
+ * positioned. This way we can create easily "thumbnails" of 
+ * each slide positioning them inside a div of any size and position.
+ */
+
 /* Slide commons for slides in sequence1 */
 .simple-city-seq1-slide {
-  position: fixed;
+  position: absolute;
   top : 0;
   left: 0;      
   width: 100%;
@@ -79,7 +84,7 @@ div.background-houses {
 }
 
 div.foreground-billboard {
-  position: fixed;
+  position: absolute;
   top: 3%;   
   left: 11%;      
   width: 78%;      
@@ -102,20 +107,10 @@ div.foreground-billboard-textarea {
   background: transparent;  
 }
 
-div.foreground-detail-basketball {
-  position: fixed;
-  width: 60px;
-  height: 60px;
-  overflow: hidden;
-  z-index: 700;
-  background: transparent url(basket_397x397_100dpi.png);
-  background-size: 100% 100%;
-}
-
 /* SLIDE STYLE 1: simple-city-seq1-slide1 (with and without title) */
 
 div.foreground-trafficsign {
-  position: fixed;
+  position: absolute;
   top: 26.56%;   
   left: 11%;      
   width: 78%;      
@@ -127,7 +122,7 @@ div.foreground-trafficsign {
 }
 
 div.foreground-trafficsign-no-title {
-  position: fixed;
+  position: absolute;
   top: 3%;   
   left: 11%;      
   width: 78%;      
@@ -382,7 +377,6 @@ img.simple-city-layout-full-height {
   margin-left: auto;
   margin-right: auto; 
 }
-
 
 
 
