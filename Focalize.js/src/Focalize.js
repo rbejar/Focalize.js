@@ -61,6 +61,7 @@ function FocalizeModule() {
   Focalize.styleConfiguration = {};
   Focalize.motios = [];  
   Focalize.$thumbContainer = null;
+  Focalize.thumbs = {};
   Focalize.status = Focalize.ValidStates.onPresentation;
   
   /**
@@ -647,15 +648,24 @@ function FocalizeModule() {
    * fitting may work properly
    */
   Focalize.adjustSlideContents = function($slideToAdjust) {
+    
+    var $textFittedElems = $slideToAdjust.find(".textFitted");
+    // Remove any previous textFit fittings in $slideToAdjust
+    // (if there were any) before fitting again.
+    // This helps with some issues I had with the thumbnails
+    // and I think it is not a bad idea in any case
+    $textFittedElems.attr("style", "");
+    
+    
     // 500 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
-    textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 3, maxFontSize: 500});  
-    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, minFontSize: 3, maxFontSize: 500});
-    textFit($slideToAdjust.find("figCaption"),{alignVert: true, minFontSize: 3, maxFontSize: 500});
+    textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 500});  
+    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToAdjust.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
     
-    // Tras aplicar el textFit a los elementos, ver cual tiene
-    // el font-size menor en cada categoría, y aplicárselo a todos, para que todos
-    // tengan el mismo tamaño dentro de una misma categoría      
+    // After textFirtting elements, find out which one has the
+    // smallest font-size and give that size to all of them, so
+    // every element in the same category (e.g. H2) have the same size
     var minimumSize = function (elementType, currentMin) {
       var i;      
       var $textFitSpan = $slideToAdjust.find(elementType + " > .textFitted");
@@ -1104,16 +1114,7 @@ function FocalizeModule() {
                               
         var $titleDiv = Focalize.$createTitleDiv(Focalize.numSlides);        
         var $slideChildren = $titleDiv;
-        
-        //Focalize.$slides[Focalize.numSlides].find("ul,li")
-        //                  .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);        
-        // This takes the first ul in the current slid and makes a deep copy (that
-        // includes every children). without the clone() this does not keep the
-        // children, only the ul itself seems to be selected. That is the reason why
-        // this clone is not need with elements without children, like the H1
-        // I DO NOT UNDERSTAND THIS VERY WELL...
-        //var $contentUL = Focalize.$slides[Focalize.numSlides].find("ul").eq(0).clone();        
-        
+                
         var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);                
         $slideChildren = $slideChildren.add($contentDiv);
         Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
@@ -1128,36 +1129,56 @@ function FocalizeModule() {
     
     Focalize.attachEventHandlers();
     
-    // My first approach was creating the thumb container once, here, and 
-    // making it visible on request. I have not been able to make
-    // it work like that (the text fitting fails after the second time it
-    // is shown), so for now I re-create it on demand. It does not seem
-    // to have a big effect on performance or memory...
-      // Create thumbContainer now that the slides have been loaded
-      //Focalize.createThumbContainer(3);
-      //Focalize.$thumbContainer.hide();
-      //$(".focalize-presentation").after(Focalize.$thumbContainer);
-
- 
+    // Experimental: this should make mobile browsers behave better
+    // (prevent undesired scrolls/zooms...) 
+    $("head").append("<meta name='viewport' content='user-scalable=no,"+ 
+                     "width=device-width, initial-scale=1, maximum-scale=1'>");
+       
+    // Create thumbContainer now that the slides have been loaded
+    Focalize.createThumbContainer(3); // 3 is a magic number
+    Focalize.$thumbContainer.hide();
+    $(".focalize-presentation").after(Focalize.$thumbContainer);
     
-    // Display first slide to start the "presentation loop"
+    // Display first slide to start the presentation
     Focalize.displaySlide(0);    
   };
   
   Focalize.showThumbs = function() {
+    var i,j;
+    var numSlide = 0;
     Focalize.status = Focalize.ValidStates.onThumbnails;
-    Focalize.createThumbContainer(4); 
+    
+    // Highlight current slide        
+    for (i = 0; i < Focalize.thumbs.nRows; i++) {
+      for (j = 0; j < Focalize.thumbs.nCols && 
+                      numSlide < Focalize.numSlides; j++) {        
+        if (Focalize.currSlideIdx === numSlide) {
+          Focalize.thumbs.$divs[i][j].addClass("yellow-frame");            
+        } else {
+          Focalize.thumbs.$divs[i][j].removeClass("yellow-frame");
+        }
+        numSlide += 1;
+      }
+    }    
+    
+    Focalize.$thumbContainer.show();
+    Focalize.$thumbContainer.find(".slideThumb").each(function() {     
+      Focalize.adjustSlideContents($(this));
+    });
+    
+    /*Focalize.createThumbContainer(4); 
     $(".focalize-presentation").after(Focalize.$thumbContainer);   
     // We must delay the adjust Contents (i.e. text fitting) until
     // we actually have our thumbnails "on screen"
     Focalize.$thumbContainer.find(".slideThumb").each(function() {     
      Focalize.adjustSlideContents($(this));
-    });     
+    });*/     
   };
   
   Focalize.hideThumbs = function() {
     Focalize.status = Focalize.ValidStates.onPresentation;    
-    Focalize.$thumbContainer.remove();
+    Focalize.$thumbContainer.hide();
+    // Focalize.$thumbContainer.remove();
   };
   
   Focalize.createThumbContainer = function(nCols) {
@@ -1170,6 +1191,7 @@ function FocalizeModule() {
     var zIndex = 30000;
     var nRows = Math.ceil(Focalize.numSlides / nCols);    
     
+    // A "full screen" black div to cover the slides
     Focalize.$thumbContainer = $("<div></div>")
       .css({
         position: "fixed",
@@ -1179,8 +1201,24 @@ function FocalizeModule() {
         bottom: 0,
         overflow: "auto",
         "z-index": 30000,
-        background: "black",  
-      });     
+        background: "black" 
+      });
+    
+    // A slightly smaller div to provide some margin to the
+    // thumbs to prevent unwanted scroll bars   
+    var $innerThumbContainer = $("<div></div>")
+      .css({
+        position: "absolute",
+        top: 2,   
+        left: 5,     
+        right: 5,                   
+        bottom: 2,
+        overflow: "show",
+        "z-index": 30000,
+        background: "transparent" 
+      });  
+      
+    Focalize.$thumbContainer.append($innerThumbContainer);  
     
     // Create a grid of divs to show the thumbnails of each slide
     var $divs = Focalize.createDivGrid(nCols, nRows, 0.5, 0.5, zIndex);    
@@ -1198,8 +1236,7 @@ function FocalizeModule() {
         Focalize.displaySlide(n);
       };  
     };
-    
-    
+        
     numSlide = 0;
     for (i = 0; i < nRows; i++) {
       for (j = 0; j < nCols && numSlide < Focalize.numSlides; j++) {
@@ -1212,10 +1249,16 @@ function FocalizeModule() {
         // do not want those changes to show on the "master" slides                       
         $divs[i][j].append(Focalize.$slideDivs[numSlide].clone().addClass(slideThumbClass));
         $divs[i][j].bind("click", slideOpener(numSlide));        
-        Focalize.$thumbContainer.append($divs[i][j]);                
+        $innerThumbContainer.append($divs[i][j]);                
         numSlide += 1;
       }
     }
+    
+    Focalize.thumbs = {
+      nCols : nCols,
+      nRows : nRows,
+      $divs: $divs      
+    };
   };
  
   

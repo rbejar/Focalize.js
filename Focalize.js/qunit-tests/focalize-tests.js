@@ -28,6 +28,13 @@ $(document).ready(function() {
   Focalize.startPresentation();  
 });
 
+/*
+ Find out how to test full Screen...
+ 
+test("In full screen", function() {
+  ok($.fullscreen.isFullScreen());
+});
+*/
 
 test("Number of sequences", function() {
   equal( Focalize.numSeqs, ExpectedValues.numSeqs);
@@ -38,7 +45,7 @@ test("Number of slides", function() {
   equal( Focalize.numSlides, ExpectedValues.numSlides);
 });
 
-test("Sequenced of slides", function() {
+test("Sequence of slides", function() {
   equal( Focalize.seqOfSlide(0), ExpectedValues.seqOfSlides[0]);
   equal( Focalize.seqOfSlide(1), ExpectedValues.seqOfSlides[1]);
 });
