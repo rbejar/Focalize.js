@@ -181,10 +181,14 @@ function FocalizeModule() {
     });
   }; 
   
-  Focalize.notFullScreenStart = function () {   
+  Focalize.notFullScreenStart = function (callBackFunction) {   
     $(document).ready(function(){
       $('.remove-before-start').remove();         
-      Focalize.startPresentation(); 
+      if (callBackFunction) {
+        Focalize.startPresentation(callBackFunction); 
+      } else {
+        Focalize.startPresentation();
+      }
     });
   };
   
@@ -193,7 +197,7 @@ function FocalizeModule() {
    * to user input (moving between slides etc.)
    */
   Focalize.attachEventHandlers = function() {    
-    $(document).keyup(Focalize.keyPresentationHandler);
+    $(document).on("keyup", Focalize.keyPresentationHandler);
     // click event does not get right click in Chromium; mousedown gets left
     // and right clicks properly in both Firefox and Chromium
     $(document).mousedown(Focalize.mousePresentationHandler);
@@ -1084,7 +1088,7 @@ function FocalizeModule() {
   };
   
   
-  Focalize.startPresentation = function () {    
+  Focalize.startPresentation = function (callBackFunction) {    
     var i,j;     
     var $allSeqs = $(".focalize-sequence");
     
@@ -1140,7 +1144,11 @@ function FocalizeModule() {
     $(".focalize-presentation").after(Focalize.$thumbContainer);
     
     // Display first slide to start the presentation
-    Focalize.displaySlide(0);    
+    if (callBackFunction) {
+      Focalize.displaySlide(0, callBackFunction);    
+    } else {
+      Focalize.displaySlide(0);
+    }
   };
   
   Focalize.showThumbs = function() {
