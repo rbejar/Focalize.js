@@ -114,6 +114,27 @@ function FocalizeModule() {
     });
   };
   
+  Focalize.fullScreenStart = function () {   
+    $(document).ready(function() {
+      $("html").bind("fscreenopen", function() {       
+        $('.remove-before-start').remove();         
+        Focalize.startPresentation();     
+      });    
+      $("html").fullscreen();
+    });
+  }; 
+  
+  Focalize.notFullScreenStart = function (callBackFunction) {   
+    $(document).ready(function(){
+      $('.remove-before-start').remove();         
+      if (callBackFunction) {
+        Focalize.startPresentation(callBackFunction); 
+      } else {
+        Focalize.startPresentation();
+      }
+    });
+  };
+  
   /**
    * Returns if the screen is in landscape (width > height). By
    * default it returns true (i.e. if it does not know, it assumes it is).
@@ -169,27 +190,6 @@ function FocalizeModule() {
     }
     throw "Slide configuration data not found for slideIdx " + slideIdx;
     return null;
-  };
-  
-  Focalize.fullScreenStart = function () {   
-    $(document).ready(function() {
-      $("html").bind("fscreenopen", function() {       
-        $('.remove-before-start').remove();         
-        Focalize.startPresentation();     
-      });    
-      $("html").fullscreen();
-    });
-  }; 
-  
-  Focalize.notFullScreenStart = function (callBackFunction) {   
-    $(document).ready(function(){
-      $('.remove-before-start').remove();         
-      if (callBackFunction) {
-        Focalize.startPresentation(callBackFunction); 
-      } else {
-        Focalize.startPresentation();
-      }
-    });
   };
   
   /**
