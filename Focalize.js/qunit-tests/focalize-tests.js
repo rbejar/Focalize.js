@@ -21,7 +21,13 @@
 ExpectedValues = {};
 ExpectedValues.numSeqs = 1;
 ExpectedValues.numSlides = 7;
-ExpectedValues.seqOfSlides = [0 ,0];
+ExpectedValues.seqOfSlides = [];
+ExpectedValues.seqOfSlides[0] = 0;
+ExpectedValues.seqOfSlides[1] = 0;
+ExpectedValues.slideTitleLayerCSSClasses = [];
+ExpectedValues.slideTitleLayerCSSClasses[0] = "foreground-billboard";
+ExpectedValues.slideTitleLayerCSSClasses[6] = "";
+
 
 // Aux values for the test. You can change them for different
 // contexts. This values imply that the tests are not deterministic,
@@ -51,13 +57,23 @@ test("Presentation properly loaded", function() {
   deepEqual( Focalize.seqOfSlide(1), ExpectedValues.seqOfSlides[1]);  
 });
 
+test("Slide style data properly loaded and accessible", function(){
+  deepEqual(Focalize.slideConfigData(0).titleLayerCSSClass, 
+            ExpectedValues.slideTitleLayerCSSClasses[0]);  
+  deepEqual(Focalize.slideConfigData(6).titleLayerCSSClass, 
+            ExpectedValues.slideTitleLayerCSSClasses[6]);
+  // If slideIdx out of range, it must throw an error
+  throws(function() {Focalize.slideConfigData(-1);});
+  throws(function() {Focalize.slideConfigData(ExpectedValues.numSlides);});
+});
+
 /*
- * This is a long test, but I need it to be sequential and I need
+ * This is a long test, but I need it to test sequential actions and I need
  * to wait for things to happen (e.g. transition between slides).
  * There is no way and no point to make this a number of separate
  * tests, as they will not be independent, and there is no way
  * to make Qunit execute tests in a given sequence if these
- * tests have to wait synchronously for each other to finish.
+ * tests have to wait for each other to finish.
  * I need to use asyncTest and call start() at the end of the 
  * last test in order to prevent the "assertion outside test context"
  * exception. 

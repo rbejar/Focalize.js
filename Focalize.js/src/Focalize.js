@@ -40,7 +40,7 @@ function FocalizeModule() {
     var valueType = typeof value;    
     if (valueType !== type) {
      // this makes sure we have a failed assertion
-     assert(false, msg);
+     assert(false, "Wrong type found");
     }
   };
     
@@ -167,13 +167,14 @@ function FocalizeModule() {
    * @param seqIdx
    */
   Focalize.seqConfigData = function(seqIdx) {
+    assert(seqIdx >= 0 && seqIdx < Focalize.numSeqs);
     var i;
     for (i = 0; i < Focalize.styleConfiguration.sequences.length; i++) {
       if (Focalize.styleConfiguration.sequences[i].name === Focalize.seqNames[seqIdx]) {
         return Focalize.styleConfiguration.sequences[i];
       }
     }
-    throw "Sequence configuration data not found for seqIdx " + seqIdx;
+    throw new Error("Sequence configuration data not found for seqIdx " + seqIdx);
     return null;
   };
 
@@ -182,13 +183,14 @@ function FocalizeModule() {
    * @param slideIdx
    */
   Focalize.slideConfigData = function(slideIdx) {
+    assert(slideIdx >= 0 && slideIdx < Focalize.numSlides);
     var i;
     for (i = 0; i < Focalize.styleConfiguration.slides.length; i++) {      
       if (Focalize.styleConfiguration.slides[i].name === Focalize.slideNames[slideIdx]) {
         return Focalize.styleConfiguration.slides[i];
       }
     }
-    throw "Slide configuration data not found for slideIdx " + slideIdx;
+    throw new Error("Slide configuration data not found for slideIdx " + slideIdx);
     return null;
   };
   
@@ -302,7 +304,7 @@ function FocalizeModule() {
       $titleTextAreaDiv = $("<div></div>")
                             .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);
       $titleContents = Focalize.$slides[slideIdx].find("h1")
-                       .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);    
+                       .addClass(Focalize.slideConfigData(slideIdx).cssClass);    
       $titleTextAreaDiv.append($titleContents);
       $titleDiv.append($titleTextAreaDiv);     
     } else { // No title
@@ -769,7 +771,7 @@ function FocalizeModule() {
     
     // I am not interested in figure elements, I will assume they
     // are there; I want imgs and figcaptions
-    var $validContentElements = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4,img,figcaption");
+    var $validContentElements = Focalize.$slides[slideIdx].find("h2,h3,h4,img,figcaption");
     
     for (i = 0; i < $validContentElements.length; i++) {
       $currElem = $validContentElements.eq(i);  
@@ -794,18 +796,12 @@ function FocalizeModule() {
    * callBackFunction will be called (if present) after the new slide
    * has been appended to the page (not necessarily after everything is completely
    * adjusted and rendered).
-   * If the slide newSlideIdx does not index, this function does nothing
-   * except for calling the callBackFunction.
+   * The slide newSlideIdx must exist.
    * @param newSlideIdx 
    * @param callBackFunction 
    */
   Focalize.displaySlide = function(newSlideIdx, callBackFunction) {  
-    if (newSlideIdx < 0 || newSlideIdx > (Focalize.numSlides - 1)) {
-      // The slide newSlideIdx does not exist. Do nothing.
-      if (callBackFunction)
-        callBackFunction();
-      return;
-    }
+    assert(newSlideIdx >= 0 && newSlideIdx < Focalize.numSlides);
     
     var i;
     var isSeqChange = false;
@@ -1089,8 +1085,9 @@ function FocalizeModule() {
   
   
   Focalize.startPresentation = function (callBackFunction) {    
-    var i,j;     
+    var i,j, currSlide;     
     var $allSeqs = $(".focalize-sequence");
+    var $currSeq, $currSeqSlides;
     
     Focalize.$slides = [];
     Focalize.numSlides = 0;
@@ -1105,24 +1102,34 @@ function FocalizeModule() {
     
     Focalize.$slideDivs = [];
     
+    // Calculate number of slides
     for (i = 0; i < Focalize.numSeqs; i++) {
-      var $currSeq = $(".focalize-sequence").eq(i);
-      var $currSeqSlides = $currSeq.find(".focalize-slide");
+      $currSeq = $(".focalize-sequence").eq(i);
+      $currSeqSlides = $currSeq.find(".focalize-slide");
+      for (j = 0; j < $currSeqSlides.size(); j++) {
+        Focalize.numSlides += 1;
+      }
+    }
+    
+    currSlide = 0;
+    for (i = 0; i < Focalize.numSeqs; i++) {
+      $currSeq = $(".focalize-sequence").eq(i);
+      $currSeqSlides = $currSeq.find(".focalize-slide");
       Focalize.$seqs[i] = $currSeq;
       Focalize.seqNames[i] = $currSeq.data('seq-name');      
-      Focalize.seqChanges[i] = Focalize.numSlides;
+      Focalize.seqChanges[i] = currSlide;
       Focalize.seqNumSlides[i] = $currSeqSlides.length;
       for (j = 0; j < $currSeqSlides.size(); j++) {
-        Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
-        Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
+        Focalize.$slides[currSlide] = $currSeq.find(".focalize-slide").eq(j);
+        Focalize.slideNames[currSlide] = Focalize.$slides[currSlide].data('slide-name');  
                               
-        var $titleDiv = Focalize.$createTitleDiv(Focalize.numSlides);        
+        var $titleDiv = Focalize.$createTitleDiv(currSlide);        
         var $slideChildren = $titleDiv;
                 
-        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);                
+        var $contentDiv = Focalize.$createContentDiv(currSlide);                
         $slideChildren = $slideChildren.add($contentDiv);
-        Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
-        Focalize.numSlides += 1;
+        Focalize.$slideDivs[currSlide] = Focalize.$createSlideDiv($slideChildren, i);        
+        currSlide += 1;
       }     
     }
     
