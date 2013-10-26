@@ -1289,10 +1289,10 @@ function FocalizeModule() {
     assert(rowGapSize >= 0 && rowGapSize <= 100, "rowGapSize must be provided and [0..100]");
     assertIsType(zIndex, "number", "zIndex must be provided and be a number");
     if (colWeights) {
-      assert(colWeights, colWeights.length === nCols, "colWeights must be an Array of exactly nCols");
+      assert(colWeights.length === nCols, "colWeights must be an Array of exactly nCols");
     }
     if (rowWeights) {
-      assert(rowWeights, rowWeights.length === nRows, "rowWeights must be an Array of exactly nRows");
+      assert(rowWeights.length === nRows, "rowWeights must be an Array of exactly nRows");
     }
                                       
                                       
