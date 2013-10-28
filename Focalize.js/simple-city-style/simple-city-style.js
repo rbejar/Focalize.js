@@ -97,3 +97,10 @@ Focalize.postInTransition = function($slideToDisplay, seqName, slideName) {
     $slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
   }
 };
+
+Focalize.outTransition = function($slideToDisplay, seqName, slideName) {
+  if (slideName === "SimpleCitySlide1_NoTitle") {
+     $slideToDisplay.transition({opacity:0, scale: 0.5 }, 200); 
+  } 
+};
+

@@ -18,8 +18,6 @@
 
 function FocalizeModule() {
   var Focalize = {};
-  
-  //var privateVariable = 1;
 
   // Simple assertion. Probably it should not be here. I have not
   // found a simple, up-to-date, not-tied-to-a-testing-framework library
@@ -37,10 +35,11 @@ function FocalizeModule() {
   
   // Valid types: "number", "string", "object"
   function assertIsType(value, type, msg) {
+    var message = msg || "Wrong type found";
     var valueType = typeof value;    
     if (valueType !== type) {
      // this makes sure we have a failed assertion
-     assert(false, "Wrong type found");
+     assert(false, message);
     }
   };
     
@@ -147,6 +146,14 @@ function FocalizeModule() {
     }   
   };
   
+  Focalize.isValidSlide = function(slideIdx) {
+    return (slideIdx >= 0 && slideIdx < Focalize.numSlides);
+  };
+  
+  Focalize.isValidSeq = function(seqIdx) {
+    return (seqIdx >= 0 && seqIdx < Focalize.numSeqs);
+  };
+  
   /**
    * Returns the index of the sequence that contains the slide slideIdx
    * (slide indexes start at 0)
@@ -167,7 +174,8 @@ function FocalizeModule() {
    * @param seqIdx
    */
   Focalize.seqConfigData = function(seqIdx) {
-    assert(seqIdx >= 0 && seqIdx < Focalize.numSeqs);
+    assert(Focalize.isValidSeq(seqIdx), 
+           "seqIdx is " + seqIdx + " in Focalize.seqConfigDataf");
     var i;
     for (i = 0; i < Focalize.styleConfiguration.sequences.length; i++) {
       if (Focalize.styleConfiguration.sequences[i].name === Focalize.seqNames[seqIdx]) {
@@ -183,7 +191,7 @@ function FocalizeModule() {
    * @param slideIdx
    */
   Focalize.slideConfigData = function(slideIdx) {
-    assert(slideIdx >= 0 && slideIdx < Focalize.numSlides);
+    assert(Focalize.isValidSlide(slideIdx));
     var i;
     for (i = 0; i < Focalize.styleConfiguration.slides.length; i++) {      
       if (Focalize.styleConfiguration.slides[i].name === Focalize.slideNames[slideIdx]) {
@@ -800,14 +808,19 @@ function FocalizeModule() {
    * @param newSlideIdx 
    * @param callBackFunction 
    */
-  Focalize.displaySlide = function(newSlideIdx, callBackFunction) {  
-    assert(newSlideIdx >= 0 && newSlideIdx < Focalize.numSlides);
+  Focalize.displaySlide = function(newSlideIdx, firstTimeOnFirstSlide, 
+                                   callBackFunction) {  
+    assert(Focalize.isValidSlide(newSlideIdx));
+    assertIsType(firstTimeOnFirstSlide, "boolean", 
+                 "firstTimeOnFirstSlide must be provided and be a boolean");
     
     var i;
     var isSeqChange = false;
     var leapForwardInSeq = false;
     var leapBackwardsInSeq = false;
     var jumpSlides = 0;
+    var currSeqIdx = Focalize.currSeqIdx;
+    var currSlideIdx = Focalize.currSlideIdx;
    
     
     var newSeqIdx = Focalize.seqOfSlide(newSlideIdx);       
@@ -821,10 +834,10 @@ function FocalizeModule() {
       } else if (newSlideIdx < (Focalize.currSlideIdx)) {
         leapBackwardsInSeq = true;
         jumpSlides = Focalize.currSlideIdx - newSlideIdx;
-      }
+      } 
     }
     
-    if (isSeqChange) {      
+    if (isSeqChange || firstTimeOnFirstSlide) {      
       $(".seqToDisplay").remove();
       var $seqToDisplay = Focalize.$createSeqDiv(Focalize.seqOfSlide(newSlideIdx));
       $(".focalize-presentation").after($seqToDisplay);
@@ -849,10 +862,13 @@ function FocalizeModule() {
     $slideToDisplay.addClass("slideToDisplay");    
     var $slideToRemove = $(".slideToDisplay");    
     
+    var currSeqConfigData = Focalize.seqConfigData(currSeqIdx);
+    var currSlideConfigData = Focalize.slideConfigData(currSlideIdx);
+    var seqConfigData = Focalize.seqConfigData(newSeqIdx);
+    var slideConfigData = Focalize.slideConfigData(newSlideIdx);
     
-    var addSlideToDisplay = function(seqName, slideName) {    
-      removeCurrentSlide(); 
-      
+    var changeSlideToDisplay = function(seqName, slideName) {    
+      $slideToRemove.remove();   
       // Maybe the user should have a certain degree of control
       // on the use of transitions for slides (at least activate / deactivate
       //  for a given slide)
@@ -861,67 +877,51 @@ function FocalizeModule() {
       //$slideToDisplay.css({opacity:0, scale:0.5});
       //$slideToDisplay.css({left:$("html").width()});
       //$slideToDisplay.css({ rotateX: 180 });
-      Focalize.preInTransition($slideToDisplay, seqName, slideName);      
+      if (Focalize.preInTransition) {
+        Focalize.preInTransition($slideToDisplay, seqName, slideName);        
+      }
       
       $(".seqToDisplay").append($slideToDisplay);  
       Focalize.adjustSlideContents($slideToDisplay);
-      
-      //var $foregroundGround = $("<div></div>").css({position:"fixed",bottom: 0, 
-      //                                              left:0, right:0, width:"100%", height:"5px"});
-      //var $foregroundDetail = $("<div></div>").addClass("foreground-detail-basketball")
-      //                          .css({position:"fixed", bottom: "40%", right:"10%"}); 
       
       
       //$slideToDisplay.transition({ opacity:1, scale: 1 }, 300);
       //$slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
       //$slideToDisplay.transition({ x:"-="+$("html").width()+"px"}, "fast", "easeOutQuint");
       //$slideToDisplay.transition({ rotateX: 0 }, "slow");    
-      Focalize.postInTransition($slideToDisplay, seqName, slideName);
-      
-      //$slideToDisplay.append($foregroundGround);
-      //$slideToDisplay.append($foregroundDetail);
-      
-          
-      // Initiate physics world and start simulation
-      // Slant gravity for testing
-      //$.physix2d.init({gravity:new Box2D.b2Vec2(-1, -10)});      
-      
-      //$foregroundGround.toPhysix2dBody({type:"static", restitution: 0.5});                      
-      //$foregroundDetail.toPhysix2dBody({shape:"circle", restitution:0.8});
-      
-      //$.physix2d.startSimulation();
-      
+      if (Focalize.postInTransition) {
+        Focalize.postInTransition($slideToDisplay, seqName, slideName);
+      }
       if (callBackFunction)
         callBackFunction();
     };
     
-    var removeCurrentSlide = function() {
-      //$.physix2d.stopSimulation();
-      $slideToRemove.remove();      
-    };
- 
     
-    
-    var seqConfigData = Focalize.seqConfigData(newSeqIdx);
-    var slideConfigData = Focalize.slideConfigData(newSlideIdx);
     if ($slideToRemove.length === 0) {
       // In first slide...
-      addSlideToDisplay(seqConfigData.name, 
+      changeSlideToDisplay(seqConfigData.name, 
                         slideConfigData.name); 
-    } else {             
-      if (leapForwardInSeq) {          
+    } else {
+      if (leapForwardInSeq) {  
+        if (Focalize.outTransition) {
+          Focalize.outTransition($slideToRemove, currSeqConfigData.name, 
+                         currSlideConfigData.name);        
+        }  
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
                                 Math.floor($("html").width()*jumpSlides*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
-        }  
-         
-               
+        }
+                       
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", 
-                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
-      } else if (leapBackwardsInSeq) {
+                         function() {changeSlideToDisplay(seqConfigData.name, slideConfigData.name);});
+      } else if (leapBackwardsInSeq) {          
+        if (Focalize.outTransition) {
+          Focalize.outTransition($slideToRemove, currSeqConfigData.name, 
+                         currSlideConfigData.name);        
+        }
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
                                 Math.floor($("html").width()*jumpSlides*
@@ -929,10 +929,9 @@ function FocalizeModule() {
                                 +"px" }, "slow");
         }
 
-
         $slideToRemove.css({position : "absolute", width : "100%"})
         .transition({ x: "+="+$("html").width()+"px" }, "slow", 
-          function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
+          function() {changeSlideToDisplay(seqConfigData.name, slideConfigData.name);});
       }
       
     }
@@ -1074,13 +1073,21 @@ function FocalizeModule() {
   Focalize.nextSlide = function() {
     var newSlideIdx = Focalize.currSlideIdx;      
     newSlideIdx = Focalize.currSlideIdx + 1;
-    Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
+    if (Focalize.isValidSlide(newSlideIdx)){
+      Focalize.displaySlide(newSlideIdx, false, Focalize.attachEventHandlers);
+    } else {
+      Focalize.attachEventHandlers();
+    }
   };
   
   Focalize.previousSlide = function() {
     var newSlideIdx = Focalize.currSlideIdx;      
     newSlideIdx = Focalize.currSlideIdx - 1;
-    Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers); 
+    if (Focalize.isValidSlide(newSlideIdx)) {
+      Focalize.displaySlide(newSlideIdx, false, Focalize.attachEventHandlers);
+    } else {
+      Focalize.attachEventHandlers();
+    }
   };
   
   
@@ -1096,9 +1103,8 @@ function FocalizeModule() {
     Focalize.$seqs = [];
     Focalize.seqNames = [];
     Focalize.seqNumSlides = []; // number of slides in each sequence
-    // Only for the first slide, current slide and seq are -1
-    Focalize.currSlideIdx = -1;
-    Focalize.currSeqIdx = -1;
+    Focalize.currSlideIdx = 0;
+    Focalize.currSeqIdx = 0;
     
     Focalize.$slideDivs = [];
     
@@ -1152,9 +1158,9 @@ function FocalizeModule() {
     
     // Display first slide to start the presentation
     if (callBackFunction) {
-      Focalize.displaySlide(0, callBackFunction);    
+      Focalize.displaySlide(0, true, callBackFunction);    
     } else {
-      Focalize.displaySlide(0);
+      Focalize.displaySlide(0, true);
     }
   };
   
@@ -1248,7 +1254,7 @@ function FocalizeModule() {
     var slideOpener = function(n) {
       return function() {
         Focalize.hideThumbs();
-        Focalize.displaySlide(n);
+        Focalize.displaySlide(n, false);
       };  
     };
         
@@ -1256,9 +1262,6 @@ function FocalizeModule() {
     for (i = 0; i < nRows; i++) {
       for (j = 0; j < nCols && numSlide < Focalize.numSlides; j++) {
         var slideThumbClass = "slideThumb";
-        if (Focalize.currSlideIdx === numSlide) {
-          slideThumbClass += " yellow-frame";
-        }
         
         // Cloning is a precaution, as we will be fitting the texts etc. and we
         // do not want those changes to show on the "master" slides                       
