@@ -38,7 +38,7 @@
     <type>com.umlet.element.custom.State</type>
     <coordinates>
       <x>190</x>
-      <y>190</y>
+      <y>250</y>
       <w>90</w>
       <h>40</h>
     </coordinates>
@@ -63,11 +63,11 @@ full screen</panel_attributes>
       <x>100</x>
       <y>80</y>
       <w>246</w>
-      <h>130</h>
+      <h>190</h>
     </coordinates>
     <panel_attributes>lt=&lt;-
 $(document).ready / load()</panel_attributes>
-    <additional_attributes>130;110;130;30</additional_attributes>
+    <additional_attributes>130;170;130;30</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.custom.State</type>
@@ -77,38 +77,38 @@ $(document).ready / load()</panel_attributes>
       <w>110</w>
       <h>50</h>
     </coordinates>
-    <panel_attributes>started not in
+    <panel_attributes>starting not in
 full screen</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>250</x>
-      <y>160</y>
-      <w>430</w>
-      <h>70</h>
+      <x>210</x>
+      <y>20</y>
+      <w>380</w>
+      <h>270</h>
     </coordinates>
     <panel_attributes>lt=&lt;-
 CLICK on "full screen button" / fullScreenStart()</panel_attributes>
-    <additional_attributes>410;50;30;50</additional_attributes>
+    <additional_attributes>320;30;70;250</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
       <x>10</x>
-      <y>200</y>
+      <y>260</y>
       <w>442</w>
-      <h>160</h>
+      <h>100</h>
     </coordinates>
     <panel_attributes>lt=&lt;-
 CLICK on "not full screen button" / notFullScreenStart()</panel_attributes>
-    <additional_attributes>230;140;230;30</additional_attributes>
+    <additional_attributes>230;80;230;30</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>600</x>
+      <x>700</x>
       <y>60</y>
       <w>236</w>
       <h>140</h>
@@ -116,7 +116,7 @@ CLICK on "not full screen button" / notFullScreenStart()</panel_attributes>
     <panel_attributes>lt=&lt;-
 "Next" Event / nextSlide()
 </panel_attributes>
-    <additional_attributes>150;120;170;50;80;50;90;120</additional_attributes>
+    <additional_attributes>120;120;200;50;50;50;70;120</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
@@ -233,12 +233,35 @@ fg=black</panel_attributes>
       <w>270</w>
       <h>80</h>
     </coordinates>
-    <panel_attributes>Once started, the behaviour is the
+    <panel_attributes>Once here, the behaviour is the
 same when in full screen and when
 not in full screen. I will not
 repeat it here...
 bg=yellow
 fg=black</panel_attributes>
     <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.State</type>
+    <coordinates>
+      <x>530</x>
+      <y>20</y>
+      <w>90</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>starting</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>530</x>
+      <y>30</y>
+      <w>198</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+/ startPresentation()</panel_attributes>
+    <additional_attributes>140;150;60;30</additional_attributes>
   </element>
 </diagram>

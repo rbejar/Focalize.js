@@ -100,7 +100,7 @@ asyncTest("Presentation works interactively", function() {
   
   var goToSlideAndKeyBack = function() {
     // Go to slide with index 6
-    Focalize.displaySlide(6, false);
+    Focalize.displaySlide(6);
     deepEqual(Focalize.currSlideIdx, 6);
     // And key back to 5
     setTimeout(function() {

@@ -43,7 +43,8 @@ function FocalizeModule() {
     }
   };
     
-  Focalize.ValidStates = {onPresentation : "ON PRESENTATION", 
+  Focalize.ValidStates = {onStarting : "ON STARTING",
+                          onPresentation : "ON PRESENTATION", 
                           onThumbnails : "ON THUMBNAILS"};
 
   Focalize.currSlideIdx = 0;
@@ -61,7 +62,7 @@ function FocalizeModule() {
   Focalize.motios = [];  
   Focalize.$thumbContainer = null;
   Focalize.thumbs = {};
-  Focalize.status = Focalize.ValidStates.onPresentation;
+  Focalize.status = Focalize.ValidStates.onStarting;
   
   /**
    * Used to start the presentation from a style JSON file. As this
@@ -808,11 +809,9 @@ function FocalizeModule() {
    * @param newSlideIdx 
    * @param callBackFunction 
    */
-  Focalize.displaySlide = function(newSlideIdx, firstTimeOnFirstSlide, 
+  Focalize.displaySlide = function(newSlideIdx,  
                                    callBackFunction) {  
     assert(Focalize.isValidSlide(newSlideIdx));
-    assertIsType(firstTimeOnFirstSlide, "boolean", 
-                 "firstTimeOnFirstSlide must be provided and be a boolean");
     
     var i;
     var isSeqChange = false;
@@ -837,7 +836,7 @@ function FocalizeModule() {
       } 
     }
     
-    if (isSeqChange || firstTimeOnFirstSlide) {      
+    if (isSeqChange || Focalize.status === Focalize.ValidStates.onStarting) {      
       $(".seqToDisplay").remove();
       var $seqToDisplay = Focalize.$createSeqDiv(Focalize.seqOfSlide(newSlideIdx));
       $(".focalize-presentation").after($seqToDisplay);
@@ -1074,7 +1073,7 @@ function FocalizeModule() {
     var newSlideIdx = Focalize.currSlideIdx;      
     newSlideIdx = Focalize.currSlideIdx + 1;
     if (Focalize.isValidSlide(newSlideIdx)){
-      Focalize.displaySlide(newSlideIdx, false, Focalize.attachEventHandlers);
+      Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
     } else {
       Focalize.attachEventHandlers();
     }
@@ -1084,7 +1083,7 @@ function FocalizeModule() {
     var newSlideIdx = Focalize.currSlideIdx;      
     newSlideIdx = Focalize.currSlideIdx - 1;
     if (Focalize.isValidSlide(newSlideIdx)) {
-      Focalize.displaySlide(newSlideIdx, false, Focalize.attachEventHandlers);
+      Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
     } else {
       Focalize.attachEventHandlers();
     }
@@ -1158,10 +1157,11 @@ function FocalizeModule() {
     
     // Display first slide to start the presentation
     if (callBackFunction) {
-      Focalize.displaySlide(0, true, callBackFunction);    
+      Focalize.displaySlide(0, callBackFunction);    
     } else {
-      Focalize.displaySlide(0, true);
+      Focalize.displaySlide(0);
     }
+    Focalize.status = Focalize.ValidStates.onPresentation;
   };
   
   Focalize.showThumbs = function() {
@@ -1254,7 +1254,7 @@ function FocalizeModule() {
     var slideOpener = function(n) {
       return function() {
         Focalize.hideThumbs();
-        Focalize.displaySlide(n, false);
+        Focalize.displaySlide(n);
       };  
     };
         
