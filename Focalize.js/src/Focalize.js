@@ -459,8 +459,8 @@ function FocalizeModule() {
       
       // elementWeights are relative to each other
       var elementWeights = {"H2": 1,
-                            "H3": 0.75,
-                            "H4": 0.6};  
+                            "H3": 0.85,
+                            "H4": 0.65};  
       // elementIndents are in percentage of the available width
       var elementIndents = {"H2": 0,
                             "H3": 3,
@@ -675,8 +675,8 @@ function FocalizeModule() {
     // 500 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
     textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 500});  
-    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
-    textFit($slideToAdjust.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, multiLine: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToAdjust.find("figCaption"),{alignVert: true, multiLine: true, minFontSize: 5, maxFontSize: 500});
     
     // After textFirtting elements, find out which one has the
     // smallest font-size and give that size to all of them, so
@@ -725,7 +725,7 @@ function FocalizeModule() {
     
     
     
-    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
     /* Alternatives to fitText that I've tried with
      * worse results.
      */
