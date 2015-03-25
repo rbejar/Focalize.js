@@ -82,6 +82,18 @@ Focalize.styleConfiguration =
       // and size are relative to the contentLayerCSSClass, I can keep the CSS class
       "contentTextAreaCSSClass": "foreground-trafficsign-textarea",
       "contentTextAreaBufferCSSClass": "foreground-trafficsign-textarea-buffer"                                                                   
+    },
+     {
+      "name": "SimpleCitySlide1_NoTitle_Blueish",
+      "applicableToSeqs": ["SimpleCitySequence1"],
+      "cssClass": "simple-city-seq1-slide1",
+      "titleLayerCSSClass": "",
+      "titleTextAreaCSSClass": "",
+      "contentLayerCSSClass": "foreground-trafficsign-blueish-no-title",
+      // I haven't forgotten changing contentTextAreaCSSClass. As is positioning
+      // and size are relative to the contentLayerCSSClass, I can keep the CSS class
+      "contentTextAreaCSSClass": "foreground-trafficsign-textarea",
+      "contentTextAreaBufferCSSClass": "foreground-trafficsign-textarea-buffer"                                                                   
     }
   ]
 };
