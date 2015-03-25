@@ -209,9 +209,13 @@ function FocalizeModule() {
    */
   Focalize.attachEventHandlers = function() {    
     $(document).on("keyup", Focalize.keyPresentationHandler);
-    // click event does not get right click in Chromium; mousedown gets left
+    // click event does not get right click in Chromium; mouseup gets left
     // and right clicks properly in both Firefox and Chromium
-    $(document).mousedown(Focalize.mousePresentationHandler);
+    // Mouseup instead of mousedown, so we can put links in slides and
+    // allow the user to follow them by clicking. It does not work
+    // very well, but it works (as long as the target of the link
+    // is _blank)
+    $(document).mouseup(Focalize.mousePresentationHandler);    
     
     $(document).hammer().on("swipe", Focalize.touchPresentationHandler);
     $(document).hammer().on("pinchin", Focalize.touchPresentationHandler);
@@ -226,7 +230,7 @@ function FocalizeModule() {
    */
   Focalize.detachEventHandlers = function() {
     $(document).unbind("keyup");
-    $(document).unbind("mousedown");
+    $(document).unbind("mouseup");
     
     $(document).hammer().off("swipe", Focalize.touchPresentationHandler);
     $(document).hammer().off("pinchin", Focalize.touchPresentationHandler);
@@ -994,8 +998,6 @@ function FocalizeModule() {
   };
   
   Focalize.mousePresentationHandler = function(event) {        
-    // jQuery which is normalized among browsers
-    
     // The idea behind the detachEventHandlers() is to prevent a 
     // new event from being captured 
     // before the action triggered by this one is over    
@@ -1003,18 +1005,18 @@ function FocalizeModule() {
     switch (event.which) {
       case 1: // left button
         if (Focalize.status === Focalize.ValidStates.onPresentation) {           
-          Focalize.detachEventHandlers();
-          Focalize.nextSlide();
+          Focalize.detachEventHandlers();          
           event.preventDefault();
           event.stopPropagation();
+          Focalize.nextSlide();
         }
         break;
       case 3: // right button
         if (Focalize.status === Focalize.ValidStates.onPresentation) {   
-          Focalize.detachEventHandlers();
-          Focalize.previousSlide();
+          Focalize.detachEventHandlers();          
           event.preventDefault();
           event.stopPropagation();
+          Focalize.previousSlide();
         }
         break;
       default:
