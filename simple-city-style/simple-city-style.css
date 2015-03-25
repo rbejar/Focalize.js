@@ -133,6 +133,18 @@ div.foreground-trafficsign-no-title {
   background-size: 100% 100%; /* We take the full div with the image, no matter what */
 }
 
+div.foreground-trafficsign-blueish-no-title {
+  position: absolute;
+  top: 3%;   
+  left: 11%;      
+  width: 78%;      
+  bottom: 2%;
+  overflow: hidden;  
+  z-index: 200;  
+  background: transparent url(big_sign_blueish_1420x881_100dpi.png) no-repeat;  
+  background-size: 100% 100%; /* We take the full div with the image, no matter what */
+}
+
 div.foreground-trafficsign-textarea-buffer {
   /* This is used as a buffer to leave some room for overflow in the
    * contents of the traffic sign (required to cope with limitations

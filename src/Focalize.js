@@ -18,8 +18,6 @@
 
 function FocalizeModule() {
   var Focalize = {};
-  
-  //var privateVariable = 1;
 
   // Simple assertion. Probably it should not be here. I have not
   // found a simple, up-to-date, not-tied-to-a-testing-framework library
@@ -37,14 +35,16 @@ function FocalizeModule() {
   
   // Valid types: "number", "string", "object"
   function assertIsType(value, type, msg) {
+    var message = msg || "Wrong type found";
     var valueType = typeof value;    
     if (valueType !== type) {
      // this makes sure we have a failed assertion
-     assert(false, msg);
+     assert(false, message);
     }
   };
     
-  Focalize.ValidStates = {onPresentation : "ON PRESENTATION", 
+  Focalize.ValidStates = {onStarting : "ON STARTING",
+                          onPresentation : "ON PRESENTATION", 
                           onThumbnails : "ON THUMBNAILS"};
 
   Focalize.currSlideIdx = 0;
@@ -62,7 +62,7 @@ function FocalizeModule() {
   Focalize.motios = [];  
   Focalize.$thumbContainer = null;
   Focalize.thumbs = {};
-  Focalize.status = Focalize.ValidStates.onPresentation;
+  Focalize.status = Focalize.ValidStates.onStarting;
   
   /**
    * Used to start the presentation from a style JSON file. As this
@@ -114,6 +114,27 @@ function FocalizeModule() {
     });
   };
   
+  Focalize.fullScreenStart = function () {   
+    $(document).ready(function() {
+      $("html").bind("fscreenopen", function() {       
+        $('.remove-before-start').remove();         
+        Focalize.startPresentation();     
+      });    
+      $("html").fullscreen();
+    });
+  }; 
+  
+  Focalize.notFullScreenStart = function (callBackFunction) {   
+    $(document).ready(function(){
+      $('.remove-before-start').remove();         
+      if (callBackFunction) {
+        Focalize.startPresentation(callBackFunction); 
+      } else {
+        Focalize.startPresentation();
+      }
+    });
+  };
+  
   /**
    * Returns if the screen is in landscape (width > height). By
    * default it returns true (i.e. if it does not know, it assumes it is).
@@ -124,6 +145,14 @@ function FocalizeModule() {
     } else {
       return true;
     }   
+  };
+  
+  Focalize.isValidSlide = function(slideIdx) {
+    return (slideIdx >= 0 && slideIdx < Focalize.numSlides);
+  };
+  
+  Focalize.isValidSeq = function(seqIdx) {
+    return (seqIdx >= 0 && seqIdx < Focalize.numSeqs);
   };
   
   /**
@@ -146,13 +175,15 @@ function FocalizeModule() {
    * @param seqIdx
    */
   Focalize.seqConfigData = function(seqIdx) {
+    assert(Focalize.isValidSeq(seqIdx), 
+           "seqIdx is " + seqIdx + " in Focalize.seqConfigDataf");
     var i;
     for (i = 0; i < Focalize.styleConfiguration.sequences.length; i++) {
       if (Focalize.styleConfiguration.sequences[i].name === Focalize.seqNames[seqIdx]) {
         return Focalize.styleConfiguration.sequences[i];
       }
     }
-    throw "Sequence configuration data not found for seqIdx " + seqIdx;
+    throw new Error("Sequence configuration data not found for seqIdx " + seqIdx);
     return null;
   };
 
@@ -161,31 +192,15 @@ function FocalizeModule() {
    * @param slideIdx
    */
   Focalize.slideConfigData = function(slideIdx) {
+    assert(Focalize.isValidSlide(slideIdx));
     var i;
     for (i = 0; i < Focalize.styleConfiguration.slides.length; i++) {      
       if (Focalize.styleConfiguration.slides[i].name === Focalize.slideNames[slideIdx]) {
         return Focalize.styleConfiguration.slides[i];
       }
     }
-    throw "Slide configuration data not found for slideIdx " + slideIdx;
+    throw new Error("Slide configuration data not found for slideIdx " + slideIdx);
     return null;
-  };
-  
-  Focalize.fullScreenStart = function () {   
-    $(document).ready(function() {
-      $("html").bind("fscreenopen", function() {       
-        $('.remove-before-start').remove();         
-        Focalize.startPresentation();     
-      });    
-      $("html").fullscreen();
-    });
-  }; 
-  
-  Focalize.notFullScreenStart = function () {   
-    $(document).ready(function(){
-      $('.remove-before-start').remove();         
-      Focalize.startPresentation(); 
-    });
   };
   
   /**
@@ -193,10 +208,14 @@ function FocalizeModule() {
    * to user input (moving between slides etc.)
    */
   Focalize.attachEventHandlers = function() {    
-    $(document).keyup(Focalize.keyPresentationHandler);
-    // click event does not get right click in Chromium; mousedown gets left
+    $(document).on("keyup", Focalize.keyPresentationHandler);
+    // click event does not get right click in Chromium; mouseup gets left
     // and right clicks properly in both Firefox and Chromium
-    $(document).mousedown(Focalize.mousePresentationHandler);
+    // Mouseup instead of mousedown, so we can put links in slides and
+    // allow the user to follow them by clicking. It does not work
+    // very well, but it works (as long as the target of the link
+    // is _blank)
+    $(document).mouseup(Focalize.mousePresentationHandler);    
     
     $(document).hammer().on("swipe", Focalize.touchPresentationHandler);
     $(document).hammer().on("pinchin", Focalize.touchPresentationHandler);
@@ -211,7 +230,7 @@ function FocalizeModule() {
    */
   Focalize.detachEventHandlers = function() {
     $(document).unbind("keyup");
-    $(document).unbind("mousedown");
+    $(document).unbind("mouseup");
     
     $(document).hammer().off("swipe", Focalize.touchPresentationHandler);
     $(document).hammer().off("pinchin", Focalize.touchPresentationHandler);
@@ -298,7 +317,7 @@ function FocalizeModule() {
       $titleTextAreaDiv = $("<div></div>")
                             .addClass(Focalize.slideConfigData(slideIdx).titleTextAreaCSSClass);
       $titleContents = Focalize.$slides[slideIdx].find("h1")
-                       .addClass(Focalize.slideConfigData(Focalize.numSlides).cssClass);    
+                       .addClass(Focalize.slideConfigData(slideIdx).cssClass);    
       $titleTextAreaDiv.append($titleContents);
       $titleDiv.append($titleTextAreaDiv);     
     } else { // No title
@@ -444,8 +463,8 @@ function FocalizeModule() {
       
       // elementWeights are relative to each other
       var elementWeights = {"H2": 1,
-                            "H3": 0.75,
-                            "H4": 0.6};  
+                            "H3": 0.85,
+                            "H4": 0.65};  
       // elementIndents are in percentage of the available width
       var elementIndents = {"H2": 0,
                             "H3": 3,
@@ -660,8 +679,8 @@ function FocalizeModule() {
     // 500 as maxFontSize means: make it as big as it gets
     // alignHoriz: true is not working for me in Firefox (though it does in Chromium)
     textFit($slideToAdjust.find("h1"), {alignVert: true, minFontSize: 5, maxFontSize: 500});  
-    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
-    textFit($slideToAdjust.find("figCaption"),{alignVert: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToAdjust.find("h2,h3,h4"),{alignVert: true, multiLine: true, minFontSize: 5, maxFontSize: 500});
+    textFit($slideToAdjust.find("figCaption"),{alignVert: true, multiLine: true, minFontSize: 5, maxFontSize: 500});
     
     // After textFirtting elements, find out which one has the
     // smallest font-size and give that size to all of them, so
@@ -710,7 +729,7 @@ function FocalizeModule() {
     
     
     
-    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
     /* Alternatives to fitText that I've tried with
      * worse results.
      */
@@ -765,7 +784,7 @@ function FocalizeModule() {
     
     // I am not interested in figure elements, I will assume they
     // are there; I want imgs and figcaptions
-    var $validContentElements = Focalize.$slides[Focalize.numSlides].find("h2,h3,h4,img,figcaption");
+    var $validContentElements = Focalize.$slides[slideIdx].find("h2,h3,h4,img,figcaption");
     
     for (i = 0; i < $validContentElements.length; i++) {
       $currElem = $validContentElements.eq(i);  
@@ -790,24 +809,21 @@ function FocalizeModule() {
    * callBackFunction will be called (if present) after the new slide
    * has been appended to the page (not necessarily after everything is completely
    * adjusted and rendered).
-   * If the slide newSlideIdx does not index, this function does nothing
-   * except for calling the callBackFunction.
+   * The slide newSlideIdx must exist.
    * @param newSlideIdx 
    * @param callBackFunction 
    */
-  Focalize.displaySlide = function(newSlideIdx, callBackFunction) {  
-    if (newSlideIdx < 0 || newSlideIdx > (Focalize.numSlides - 1)) {
-      // The slide newSlideIdx does not exist. Do nothing.
-      if (callBackFunction)
-        callBackFunction();
-      return;
-    }
+  Focalize.displaySlide = function(newSlideIdx,  
+                                   callBackFunction) {  
+    assert(Focalize.isValidSlide(newSlideIdx));
     
     var i;
     var isSeqChange = false;
     var leapForwardInSeq = false;
     var leapBackwardsInSeq = false;
     var jumpSlides = 0;
+    var currSeqIdx = Focalize.currSeqIdx;
+    var currSlideIdx = Focalize.currSlideIdx;
    
     
     var newSeqIdx = Focalize.seqOfSlide(newSlideIdx);       
@@ -821,10 +837,10 @@ function FocalizeModule() {
       } else if (newSlideIdx < (Focalize.currSlideIdx)) {
         leapBackwardsInSeq = true;
         jumpSlides = Focalize.currSlideIdx - newSlideIdx;
-      }
+      } 
     }
     
-    if (isSeqChange) {      
+    if (isSeqChange || Focalize.status === Focalize.ValidStates.onStarting) {      
       $(".seqToDisplay").remove();
       var $seqToDisplay = Focalize.$createSeqDiv(Focalize.seqOfSlide(newSlideIdx));
       $(".focalize-presentation").after($seqToDisplay);
@@ -849,10 +865,13 @@ function FocalizeModule() {
     $slideToDisplay.addClass("slideToDisplay");    
     var $slideToRemove = $(".slideToDisplay");    
     
+    var currSeqConfigData = Focalize.seqConfigData(currSeqIdx);
+    var currSlideConfigData = Focalize.slideConfigData(currSlideIdx);
+    var seqConfigData = Focalize.seqConfigData(newSeqIdx);
+    var slideConfigData = Focalize.slideConfigData(newSlideIdx);
     
-    var addSlideToDisplay = function(seqName, slideName) {    
-      removeCurrentSlide(); 
-      
+    var changeSlideToDisplay = function(seqName, slideName) {    
+      $slideToRemove.remove();   
       // Maybe the user should have a certain degree of control
       // on the use of transitions for slides (at least activate / deactivate
       //  for a given slide)
@@ -861,67 +880,51 @@ function FocalizeModule() {
       //$slideToDisplay.css({opacity:0, scale:0.5});
       //$slideToDisplay.css({left:$("html").width()});
       //$slideToDisplay.css({ rotateX: 180 });
-      Focalize.preInTransition($slideToDisplay, seqName, slideName);      
+      if (Focalize.preInTransition) {
+        Focalize.preInTransition($slideToDisplay, seqName, slideName);        
+      }
       
       $(".seqToDisplay").append($slideToDisplay);  
       Focalize.adjustSlideContents($slideToDisplay);
-      
-      //var $foregroundGround = $("<div></div>").css({position:"fixed",bottom: 0, 
-      //                                              left:0, right:0, width:"100%", height:"5px"});
-      //var $foregroundDetail = $("<div></div>").addClass("foreground-detail-basketball")
-      //                          .css({position:"fixed", bottom: "40%", right:"10%"}); 
       
       
       //$slideToDisplay.transition({ opacity:1, scale: 1 }, 300);
       //$slideToDisplay.transition({opacity:1, scale: 1, delay: 50 }, 300);
       //$slideToDisplay.transition({ x:"-="+$("html").width()+"px"}, "fast", "easeOutQuint");
       //$slideToDisplay.transition({ rotateX: 0 }, "slow");    
-      Focalize.postInTransition($slideToDisplay, seqName, slideName);
-      
-      //$slideToDisplay.append($foregroundGround);
-      //$slideToDisplay.append($foregroundDetail);
-      
-          
-      // Initiate physics world and start simulation
-      // Slant gravity for testing
-      //$.physix2d.init({gravity:new Box2D.b2Vec2(-1, -10)});      
-      
-      //$foregroundGround.toPhysix2dBody({type:"static", restitution: 0.5});                      
-      //$foregroundDetail.toPhysix2dBody({shape:"circle", restitution:0.8});
-      
-      //$.physix2d.startSimulation();
-      
+      if (Focalize.postInTransition) {
+        Focalize.postInTransition($slideToDisplay, seqName, slideName);
+      }
       if (callBackFunction)
         callBackFunction();
     };
     
-    var removeCurrentSlide = function() {
-      //$.physix2d.stopSimulation();
-      $slideToRemove.remove();      
-    };
- 
     
-    
-    var seqConfigData = Focalize.seqConfigData(newSeqIdx);
-    var slideConfigData = Focalize.slideConfigData(newSlideIdx);
     if ($slideToRemove.length === 0) {
       // In first slide...
-      addSlideToDisplay(seqConfigData.name, 
+      changeSlideToDisplay(seqConfigData.name, 
                         slideConfigData.name); 
-    } else {             
-      if (leapForwardInSeq) {          
+    } else {
+      if (leapForwardInSeq) {  
+        if (Focalize.outTransition) {
+          Focalize.outTransition($slideToRemove, currSeqConfigData.name, 
+                         currSlideConfigData.name);        
+        }  
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "-="+
                                 Math.floor($("html").width()*jumpSlides*
                                  seqConfigData.backgroundLayers[i].scrollSpeed)
                                 +"px" }, "slow");
-        }  
-         
-               
+        }
+                       
         $slideToRemove.css({position : "absolute", width : "100%"})
                       .transition({ x: "-="+$("html").width()+"px" }, "slow", 
-                         function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
-      } else if (leapBackwardsInSeq) {
+                         function() {changeSlideToDisplay(seqConfigData.name, slideConfigData.name);});
+      } else if (leapBackwardsInSeq) {          
+        if (Focalize.outTransition) {
+          Focalize.outTransition($slideToRemove, currSeqConfigData.name, 
+                         currSlideConfigData.name);        
+        }
         for (i = 0; i < seqConfigData.backgroundLayers.length; i++) {
           $(".backToScroll"+i).transition({ x: "+="+
                                 Math.floor($("html").width()*jumpSlides*
@@ -929,10 +932,9 @@ function FocalizeModule() {
                                 +"px" }, "slow");
         }
 
-
         $slideToRemove.css({position : "absolute", width : "100%"})
         .transition({ x: "+="+$("html").width()+"px" }, "slow", 
-          function() {addSlideToDisplay(seqConfigData.name, slideConfigData.name);});
+          function() {changeSlideToDisplay(seqConfigData.name, slideConfigData.name);});
       }
       
     }
@@ -996,8 +998,6 @@ function FocalizeModule() {
   };
   
   Focalize.mousePresentationHandler = function(event) {        
-    // jQuery which is normalized among browsers
-    
     // The idea behind the detachEventHandlers() is to prevent a 
     // new event from being captured 
     // before the action triggered by this one is over    
@@ -1005,18 +1005,18 @@ function FocalizeModule() {
     switch (event.which) {
       case 1: // left button
         if (Focalize.status === Focalize.ValidStates.onPresentation) {           
-          Focalize.detachEventHandlers();
-          Focalize.nextSlide();
+          Focalize.detachEventHandlers();          
           event.preventDefault();
           event.stopPropagation();
+          Focalize.nextSlide();
         }
         break;
       case 3: // right button
         if (Focalize.status === Focalize.ValidStates.onPresentation) {   
-          Focalize.detachEventHandlers();
-          Focalize.previousSlide();
+          Focalize.detachEventHandlers();          
           event.preventDefault();
           event.stopPropagation();
+          Focalize.previousSlide();
         }
         break;
       default:
@@ -1074,19 +1074,28 @@ function FocalizeModule() {
   Focalize.nextSlide = function() {
     var newSlideIdx = Focalize.currSlideIdx;      
     newSlideIdx = Focalize.currSlideIdx + 1;
-    Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
+    if (Focalize.isValidSlide(newSlideIdx)){
+      Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
+    } else {
+      Focalize.attachEventHandlers();
+    }
   };
   
   Focalize.previousSlide = function() {
     var newSlideIdx = Focalize.currSlideIdx;      
     newSlideIdx = Focalize.currSlideIdx - 1;
-    Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers); 
+    if (Focalize.isValidSlide(newSlideIdx)) {
+      Focalize.displaySlide(newSlideIdx, Focalize.attachEventHandlers);
+    } else {
+      Focalize.attachEventHandlers();
+    }
   };
   
   
-  Focalize.startPresentation = function () {    
-    var i,j;     
+  Focalize.startPresentation = function (callBackFunction) {    
+    var i,j, currSlide;     
     var $allSeqs = $(".focalize-sequence");
+    var $currSeq, $currSeqSlides;
     
     Focalize.$slides = [];
     Focalize.numSlides = 0;
@@ -1095,30 +1104,39 @@ function FocalizeModule() {
     Focalize.$seqs = [];
     Focalize.seqNames = [];
     Focalize.seqNumSlides = []; // number of slides in each sequence
-    // Only for the first slide, current slide and seq are -1
-    Focalize.currSlideIdx = -1;
-    Focalize.currSeqIdx = -1;
+    Focalize.currSlideIdx = 0;
+    Focalize.currSeqIdx = 0;
     
     Focalize.$slideDivs = [];
     
+    // Calculate number of slides
     for (i = 0; i < Focalize.numSeqs; i++) {
-      var $currSeq = $(".focalize-sequence").eq(i);
-      var $currSeqSlides = $currSeq.find(".focalize-slide");
+      $currSeq = $(".focalize-sequence").eq(i);
+      $currSeqSlides = $currSeq.find(".focalize-slide");
+      for (j = 0; j < $currSeqSlides.size(); j++) {
+        Focalize.numSlides += 1;
+      }
+    }
+    
+    currSlide = 0;
+    for (i = 0; i < Focalize.numSeqs; i++) {
+      $currSeq = $(".focalize-sequence").eq(i);
+      $currSeqSlides = $currSeq.find(".focalize-slide");
       Focalize.$seqs[i] = $currSeq;
       Focalize.seqNames[i] = $currSeq.data('seq-name');      
-      Focalize.seqChanges[i] = Focalize.numSlides;
+      Focalize.seqChanges[i] = currSlide;
       Focalize.seqNumSlides[i] = $currSeqSlides.length;
       for (j = 0; j < $currSeqSlides.size(); j++) {
-        Focalize.$slides[Focalize.numSlides] = $currSeq.find(".focalize-slide").eq(j);
-        Focalize.slideNames[Focalize.numSlides] = Focalize.$slides[Focalize.numSlides].data('slide-name');  
+        Focalize.$slides[currSlide] = $currSeq.find(".focalize-slide").eq(j);
+        Focalize.slideNames[currSlide] = Focalize.$slides[currSlide].data('slide-name');  
                               
-        var $titleDiv = Focalize.$createTitleDiv(Focalize.numSlides);        
+        var $titleDiv = Focalize.$createTitleDiv(currSlide);        
         var $slideChildren = $titleDiv;
                 
-        var $contentDiv = Focalize.$createContentDiv(Focalize.numSlides);                
+        var $contentDiv = Focalize.$createContentDiv(currSlide);                
         $slideChildren = $slideChildren.add($contentDiv);
-        Focalize.$slideDivs[Focalize.numSlides] = Focalize.$createSlideDiv($slideChildren, i);        
-        Focalize.numSlides += 1;
+        Focalize.$slideDivs[currSlide] = Focalize.$createSlideDiv($slideChildren, i);        
+        currSlide += 1;
       }     
     }
     
@@ -1129,7 +1147,10 @@ function FocalizeModule() {
     
     Focalize.attachEventHandlers();
     
-    $("head").append("<meta name='viewport' content='user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1'>");
+    // Experimental: this should make mobile browsers behave better
+    // (prevent undesired scrolls/zooms...) 
+    $("head").append("<meta name='viewport' content='user-scalable=no,"+ 
+                     "width=device-width, initial-scale=1, maximum-scale=1'>");
        
     // Create thumbContainer now that the slides have been loaded
     Focalize.createThumbContainer(3); // 3 is a magic number
@@ -1137,7 +1158,12 @@ function FocalizeModule() {
     $(".focalize-presentation").after(Focalize.$thumbContainer);
     
     // Display first slide to start the presentation
-    Focalize.displaySlide(0);    
+    if (callBackFunction) {
+      Focalize.displaySlide(0, callBackFunction);    
+    } else {
+      Focalize.displaySlide(0);
+    }
+    Focalize.status = Focalize.ValidStates.onPresentation;
   };
   
   Focalize.showThumbs = function() {
@@ -1238,9 +1264,6 @@ function FocalizeModule() {
     for (i = 0; i < nRows; i++) {
       for (j = 0; j < nCols && numSlide < Focalize.numSlides; j++) {
         var slideThumbClass = "slideThumb";
-        if (Focalize.currSlideIdx === numSlide) {
-          slideThumbClass += " yellow-frame";
-        }
         
         // Cloning is a precaution, as we will be fitting the texts etc. and we
         // do not want those changes to show on the "master" slides                       
@@ -1278,10 +1301,10 @@ function FocalizeModule() {
     assert(rowGapSize >= 0 && rowGapSize <= 100, "rowGapSize must be provided and [0..100]");
     assertIsType(zIndex, "number", "zIndex must be provided and be a number");
     if (colWeights) {
-      assert(colWeights, colWeights.length === nCols, "colWeights must be an Array of exactly nCols");
+      assert(colWeights.length === nCols, "colWeights must be an Array of exactly nCols");
     }
     if (rowWeights) {
-      assert(rowWeights, rowWeights.length === nRows, "rowWeights must be an Array of exactly nRows");
+      assert(rowWeights.length === nRows, "rowWeights must be an Array of exactly nRows");
     }
                                       
                                       
