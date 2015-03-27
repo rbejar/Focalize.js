@@ -71,7 +71,7 @@ test("Slide style data properly loaded and accessible", function(){
  * This is a long test, but I need it to test sequential actions and I need
  * to wait for things to happen (e.g. transition between slides).
  * There is no way and no point to make this a number of separate
- * tests, as they will not be independent, and there is no way
+ * tests, as they will not be independent, and there is no way AFAIK
  * to make Qunit execute tests in a given sequence if these
  * tests have to wait for each other to finish.
  * I need to use asyncTest and call start() at the end of the 
@@ -109,8 +109,17 @@ asyncTest("Presentation works interactively", function() {
       // Again, wait for the back transition to finish
       // before the next test
       setTimeout(function() {    
-        showHideThumbs();  
+        goToSlideByHashChange();  
       }, AuxValues.waitSlideChangeSeconds * 1000);                    
+    }, AuxValues.waitSlideChangeSeconds * 1000);
+  };
+  
+   var goToSlideByHashChange = function() {
+    // Go to slide with index 3
+    window.location.hash = "#3";
+    setTimeout(function() {      
+      deepEqual(Focalize.currSlideIdx, 3);
+      showHideThumbs();                     
     }, AuxValues.waitSlideChangeSeconds * 1000);
   };
   
